@@ -42,6 +42,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+    post:
+      summary: Create Product
+      description: Creates a new product.
+      operationId: createProduct
+      tags:
+        - products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
   /products/{productId}:
     get:
       summary: Get Product Details
@@ -63,6 +84,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+    patch:
+      summary: Update Product
+      description: Updates an existing product.
+      operationId: updateProduct
+      tags:
+        - products
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            type: string
+          required: true
+          description: ID of the product to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
         '404':
           description: Product not found
 components:

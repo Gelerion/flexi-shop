@@ -11,12 +11,22 @@ import java.util.List;
 public class ProductsController implements ProductsApi {
 
     @Override
+    public ResponseEntity<Product> createProduct(Product product) {
+        return null;
+    }
+
+    @Override
     public ResponseEntity<Product> getProduct(String productId) {
         return ResponseEntity.ok(new Product());
     }
 
     @Override
     public ResponseEntity<List<Product>> searchProducts(String query, String filters, String sort) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<Product> updateProduct(String productId, Product product) {
         return null;
     }
 }
