@@ -5,6 +5,7 @@ plugins {
 //	id("org.springframework.cloud.contract") version "4.1.3"
 	id("org.openapi.generator") version "7.7.0"
 	id("idea")
+	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
 }
 
 group = "com.gelerion.flexi.shop"
@@ -44,7 +45,14 @@ dependencies {
 
 	// Persistence
 	implementation("org.springframework.boot:spring-boot-starter-jooq")
+	implementation("org.jooq:jooq-meta")
+	implementation("org.jooq:jooq-codegen")
+	jooqCodegen("org.postgresql:postgresql")
+
 	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-database-postgresql")
+	runtimeOnly("org.postgresql:postgresql")
+
 
 	// Reliability
 	implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
@@ -73,7 +81,7 @@ dependencyManagement {
 openApiGenerate {
 	generatorName.set("spring")
 	inputSpec.set("$projectDir/api/openapi/openapi.yaml")
-	outputDir.set("${layout.buildDirectory.get()}/generated") // Output directory for the generated code
+	outputDir.set("${layout.buildDirectory.get()}/generated/api") // Output directory for the generated code
 	apiPackage.set("com.gelerion.flexi.shop.product.catalog.rest.controllers") // Package for the generated API classes
 	modelPackage.set("com.gelerion.flexi.shop.product.catalog.models") // Package for the generated models
 	configOptions.set(mapOf(
@@ -93,7 +101,10 @@ openApiGenerate {
 sourceSets {
 	main {
 		java {
-			srcDirs("${layout.buildDirectory.get()}/generated/src/main/java/")
+			srcDirs(
+				"${layout.buildDirectory.get()}/generated/api/src/main/java/",
+				"${layout.buildDirectory.get()}/generated/jooq"
+			)
 		}
 	}
 }
@@ -107,6 +118,35 @@ idea {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+jooq {
+	configuration {
+		jdbc {
+			driver = "org.postgresql.Driver"
+			url = "jdbc:postgresql://localhost:5432/product_catalog"
+			user = "user"
+			password = "password"
+		}
+
+		generator {
+			database {
+				name = "org.jooq.meta.postgres.PostgresDatabase"
+				inputSchema = "public"
+			}
+
+			target {
+				packageName = "com.gelerion.flexi.shop.product.catalog.domain.entities"
+				directory = "${layout.buildDirectory.get()}/generated/jooq"
+			}
+
+			generate {
+				isDeprecated = false
+				isImmutablePojos = false
+				isFluentSetters = true
+			}
+		}
+	}
 }
 
 //tasks.contractTest {

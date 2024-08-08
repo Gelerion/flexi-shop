@@ -9,30 +9,40 @@ paths:
   /products:
     get:
       summary: Search Products
-      description: Retrieves a list of products based on a search query.
+      description: Retrieves a list of products based on a search query
       operationId: searchProducts
       tags:
         - products
       parameters:
         - in: query
-          name: query
+          name: filter
+          style: deepObject
+          explode: true
           schema:
-            type: string
-          required: true
-          description: Search query string
+            $ref: '#/components/schemas/ProductCriteria'
+          required: false
+          description: Filter products by any property and an operator
         - in: query
-          name: filters
+          name: q
           schema:
             type: string
           required: false
-          description: JSON string representing additional filters
-        - in: query
-          name: sort
+          description: Free text search query string
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
           schema:
             type: string
-            enum: [relevance, price_asc, price_desc, newest]
+            example: "price"
+        - name: order
+          in: query
+          description: Order of sorting
           required: false
-          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            example: "asc"
       responses:
         '200':
           description: List of Products
@@ -191,3 +201,29 @@ components:
         stock:
           type: integer
           description: Available stock for the variant
+    ProductCriteria:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: object
+          properties:
+            eq:
+              type: string
+        price:
+          $ref: '#/components/schemas/SearchOperators'
+        rating:
+          $ref: '#/components/schemas/SearchOperators'
+    SearchOperators:
+      type: object
+      properties:
+        gt:
+          type: number
+          format: float
+        lt:
+          type: number
+          format: float
+        eq:
+          type: number
+          format: float
