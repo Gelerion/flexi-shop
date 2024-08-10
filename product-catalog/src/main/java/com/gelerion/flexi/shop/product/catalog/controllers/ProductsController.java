@@ -26,13 +26,7 @@ public class ProductsController implements ProductsApi {
 
     @Override
     public ResponseEntity<Product> getProduct(String productId) {
-        List<TagRecord> tags = productsService.getProduct(productId);
-        Product product = new Product();
-        product.setTags(tags.stream()
-                .map(TagRecord::getTag)
-                .toList()
-        );
-
+        var product = productsService.getProduct(productId);
         return ResponseEntity.ok(product);
     }
 

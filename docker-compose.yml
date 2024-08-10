@@ -3,7 +3,9 @@ services:
     image: postgres:latest
     environment:
       POSTGRES_DB: product_catalog
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
+    env_file:
+      - .env

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.3.1"
@@ -6,10 +8,16 @@ plugins {
 	id("org.openapi.generator") version "7.7.0"
 	id("idea")
 	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
+	kotlin("jvm")
 }
 
 group = "com.gelerion.flexi.shop"
 version = "0.0.1-SNAPSHOT"
+
+
+val config = Properties().apply {
+	load(file("../.env").inputStream())
+}
 
 java {
 	toolchain {
@@ -51,8 +59,11 @@ dependencies {
 
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
-	runtimeOnly("org.postgresql:postgresql")
+	implementation("org.postgresql:postgresql")
 
+	// Mapping
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 
 	// Reliability
 	implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
@@ -60,6 +71,8 @@ dependencies {
 	// Dev
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+	// https://github.com/maciejwalkowiak/spring-boot-startup-report
+	developmentOnly("com.maciejwalkowiak.spring:spring-boot-startup-report:0.2.0")
 
     // Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -67,6 +80,7 @@ dependencies {
 //	testImplementation("org.springframework.cloud:spring-cloud-starter-contract-verifier")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation(kotlin("stdlib-jdk8"))
 }
 
 dependencyManagement {
@@ -125,8 +139,8 @@ jooq {
 		jdbc {
 			driver = "org.postgresql.Driver"
 			url = "jdbc:postgresql://localhost:5432/product_catalog"
-			user = "user"
-			password = "password"
+			user = config["DB_USER"] as String
+			password = config["DB_PASSWORD"] as String
 		}
 
 		generator {

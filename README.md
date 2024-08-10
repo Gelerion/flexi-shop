@@ -3,6 +3,9 @@ FlexiShop, a fictional e-commerce platform, several services can be designed to 
 of the system. Below is a detailed breakdown of the potential services that could be implemented, along with their
 responsibilities:
 
+### Startup report
+http://localhost:8080/startup-report
+
 ## Support Advanced Filtering
 Clients allowed to filter results using various operators such as equal (`eq`), less than or equal (`lte`), greater 
 than or equal (`gte`), between, and more. This can be achieved through query parameters.  
