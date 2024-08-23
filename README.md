@@ -53,7 +53,6 @@ Provide parameters for sorting and paginating results. This helps in managing la
 **Example Endpoints:**
 - `POST /orders`
 - `GET /orders/{orderId}`
-- `GET /orders/user/{userId}`
 - `PUT /orders/{orderId}/cancel`
 - `POST /orders/{orderId}/return`
 
@@ -79,7 +78,7 @@ Provide parameters for sorting and paginating results. This helps in managing la
 **Example Endpoints:**
 - `POST /shipments`
 - `GET /shipments/{shipmentId}`
-- `PUT /shipments/{shipmentId}/update`
+- `PUT /shipments/{shipmentId}`
 - `GET /shipments/order/{orderId}`
 
 ## 6. Inventory Service

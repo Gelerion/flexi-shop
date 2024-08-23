@@ -51,7 +51,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/ProductResource'
     post:
       summary: Create Product
       description: Creates a new product.
@@ -63,14 +63,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Product'
+              $ref: '#/components/schemas/ProductResource'
       responses:
         '201':
           description: Product created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductResource'
         '400':
           description: Invalid input
   /products/{productId}:
@@ -93,7 +93,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductResource'
         '404':
           description: Product not found
     patch:
@@ -114,25 +114,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Product'
+              $ref: '#/components/schemas/ProductResource'
       responses:
         '200':
           description: Product updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductResource'
         '400':
           description: Invalid input
         '404':
           description: Product not found
 components:
   schemas:
-    Product:
+    ProductResource:
       type: object
       properties:
         productId:
-          type: string
+          type: number
+          format: integer
           description: Unique identifier of the product
         name:
           type: string
@@ -156,11 +157,11 @@ components:
         specifications:
           type: array
           items:
-            $ref: '#/components/schemas/Specification'
+            $ref: '#/components/schemas/SpecificationResource'
         images:
           type: array
           items:
-            $ref: '#/components/schemas/Image'
+            $ref: '#/components/schemas/ImageResource'
         stock:
           type: integer
           description: Available stock for the product
@@ -172,8 +173,8 @@ components:
         variants:
           type: array
           items:
-            $ref: '#/components/schemas/Variant'
-    Specification:
+            $ref: '#/components/schemas/VariantResource'
+    SpecificationResource:
       type: object
       properties:
         key:
@@ -182,24 +183,22 @@ components:
         value:
           type: string
           description: Specification value
-    Image:
+    ImageResource:
       type: object
       properties:
         url:
           type: string
           format: uri
           description: URL of the product image
-    Variant:
+    VariantResource:
       type: object
       properties:
-        variantId:
-          type: string
-          description: Unique identifier of the product variant
         color:
           type: string
           description: Color of the product variant
         stock:
           type: integer
+          format: int64
           description: Available stock for the variant
     ProductCriteria:
       type: object

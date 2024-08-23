@@ -1,0 +1,9 @@
+spring:
+    application:
+      name: product-catalog
+
+
+logging:
+  level:
+    # Show SQL statements
+    org.jooq.tools.LoggerListener: DEBUG

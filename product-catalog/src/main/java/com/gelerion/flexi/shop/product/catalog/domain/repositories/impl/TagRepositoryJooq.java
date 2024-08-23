@@ -1,6 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 
-import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.Tag;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.TagTable;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.TagRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.TagRepository;
 import org.jooq.DSLContext;
@@ -19,6 +19,6 @@ public class TagRepositoryJooq implements TagRepository {
 
     @Override
     public List<TagRecord> getTags() {
-        return dsl.selectFrom(Tag.TAG).fetch();
+        return dsl.selectFrom(TagTable.TAG).fetch();
     }
 }

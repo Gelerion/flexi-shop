@@ -1,7 +1,7 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories;
 
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
-import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeRecord;
+import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeEntity;
 
 import java.util.Optional;
 
@@ -14,7 +14,7 @@ public interface ProductRepository {
     CompositeProductRepository composite();
 
     interface CompositeProductRepository {
-        Optional<ProductCompositeRecord> findById(int productId);
+        Optional<ProductCompositeEntity> findById(int productId);
 
     }
 

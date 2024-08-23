@@ -1,20 +1,21 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 
+import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
-import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeRecord;
+import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeEntity;
 import org.jooq.*;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.Brand.BRAND;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.Category.*;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.Product.PRODUCT;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.Specification.SPECIFICATION;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.SubCategory.SUB_CATEGORY;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ImageTable.IMAGE;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable.PRODUCT;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.SpecificationTable.SPECIFICATION;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.TagTable.TAG;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.VariantTable.VARIANT;
+import static org.jooq.Records.mapping;
 import static org.jooq.impl.DSL.*;
 
 @Repository
@@ -56,46 +57,52 @@ public class ProductRepositoryJooq implements ProductRepository {
         }
 
         @Override
-        public Optional<ProductCompositeRecord> findById(int productId) {
+        public Optional<ProductCompositeEntity> findById(int productId) {
+            Field<List<ImageEntity>> images = multiset(
+                    selectFrom(IMAGE)
+                            .where(IMAGE.PRODUCT_ID.eq(PRODUCT.ID)))
+                    .as("images")
+                    .convertFrom(r -> r.into(ImageEntity.class));
             return dsl.select(
-                    PRODUCT.ID,
-                    PRODUCT.NAME,
-                    PRODUCT.PRICE,
-                    PRODUCT.STOCK,
-                    CATEGORY.NAME.as("category_name"),
-                    SUB_CATEGORY.NAME.as("sub_category_name"),
-                    BRAND.NAME.as("brand_name"),
-                    multiset(
-                            select(SPECIFICATION.KEY, SPECIFICATION.VALUE)
-                                    .from(SPECIFICATION)
-                                    .where(SPECIFICATION.PRODUCT_ID.eq(PRODUCT.ID))
-                            //.convertFrom(r -> r.into(Actor.class)))
-                    ).as("specifications")
-            )
+                            PRODUCT.convertFrom(r -> r.into(ProductEntity.class)),
+                            // implicit join https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/implicit-join/
+                            PRODUCT.category()
+                                    .as("category")
+                                    .convertFrom(r -> r.into(CategoryEntity.class)),
+                            PRODUCT.subCategory()
+                                    .as("sub_category")
+                                    .convertFrom(r -> r.into(SubCategoryEntity.class)),
+                            PRODUCT.brand()
+                                    .as("brand")
+                                    .convertFrom(r -> r.into(BrandEntity.class)),
+                            multiset(
+                                    selectFrom(SPECIFICATION)
+                                            .where(SPECIFICATION.PRODUCT_ID.eq(PRODUCT.ID)))
+                                    .as("specifications")
+                                    .convertFrom(r -> r.into(SpecificationEntity.class)),
+                            multisets.IMAGES,
+                            multiset(
+                                    selectFrom(TAG)
+                                            .where(TAG.PRODUCT_ID.eq(PRODUCT.ID)))
+                                    .as("tags")
+                                    .convertFrom(r -> r.into(TagEntity.class)),
+                            multiset(
+                                    selectFrom(VARIANT)
+                                            .where(VARIANT.PRODUCT_ID.eq(PRODUCT.ID)))
+                                    .as("variants")
+                                    .convertFrom(r -> r.into(VariantEntity.class))
+                    )
                     .from(PRODUCT)
-                    .join(CATEGORY).on(PRODUCT.CATEGORY_ID.eq(CATEGORY.ID))
-                    .join(SUB_CATEGORY).on(PRODUCT.SUB_CATEGORY_ID.eq(SUB_CATEGORY.ID))
-                    .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
                     .where(PRODUCT.ID.eq(productId))
-                    // .fetch(mapping(Film::new))
-                    .fetchOptional(record -> new ProductCompositeRecord(
-                            record.get(PRODUCT.ID).toString(),
-                            record.get(PRODUCT.NAME),
-                            "",
-//                            record.get(PRODUCT.DESCRIPTION),
-                            record.get(PRODUCT.PRICE).floatValue(),
-                            record.get(CATEGORY.NAME),
-                            record.get(SUB_CATEGORY.NAME),
-                            record.get(BRAND.NAME),
-                            record.component8().map(it ->
-                                    Map.entry(it.component1(), it.component2())
-                            ),
-                            Collections.emptyList(),
-                            0,
-                            Collections.emptyList(),
-                            Collections.emptyList()
-
-                    ));
+                    .fetchOptional(mapping(ProductCompositeEntity::new));
         }
+    }
+
+    private static class multisets {
+        private static final Field<List<ImageEntity>> IMAGES = multiset(
+                selectFrom(IMAGE)
+                        .where(IMAGE.PRODUCT_ID.eq(PRODUCT.ID)))
+                .as("images")
+                .convertFrom(r -> r.into(ImageEntity.class));
     }
 }

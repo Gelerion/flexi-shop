@@ -1,3 +1,4 @@
+import org.jooq.meta.jaxb.MatcherTransformType
 import java.util.Properties
 
 plugins {
@@ -8,12 +9,11 @@ plugins {
 	id("org.openapi.generator") version "7.7.0"
 	id("idea")
 	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
-	kotlin("jvm")
+//	kotlin("jvm")
 }
 
 group = "com.gelerion.flexi.shop"
 version = "0.0.1-SNAPSHOT"
-
 
 val config = Properties().apply {
 	load(file("../.env").inputStream())
@@ -156,8 +156,31 @@ jooq {
 
 			generate {
 				isDeprecated = false
-				isImmutablePojos = false
 				isFluentSetters = true
+				isJavaTimeTypes = true
+
+				isRecords = true  // Generates Record classes
+				isPojos = true    // Generates POJOs
+				isPojosAsJavaRecordClasses = true
+				isImmutablePojos = true
+
+				// Naming conventions: add Entity suffix for repository layer objects
+				strategy {
+					matchers {
+						tables {
+							table {
+								tableClass {
+									transform = MatcherTransformType.PASCAL
+									expression = "\$0_Table"
+								}
+								pojoClass {
+									transform = MatcherTransformType.PASCAL
+									expression = "\$0_Entity"
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
