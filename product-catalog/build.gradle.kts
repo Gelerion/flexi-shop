@@ -106,17 +106,19 @@ openApiGenerate {
 		"useTags" to "true", // Generate one interface per tag
 		"documentationProvider" to "none", // No documentation provider
 		"useSwaggerUI" to "false", // Do not use Swagger UI
-		"useSpringBoot3" to "true"
+		"useSpringBoot3" to "true",
+		"sourceFolder" to "", // Do not add src/main/java package
+		"useJakartaEe" to "true"
 	))
-	generateApiDocumentation.set(false)
-	generateModelDocumentation.set(false)
+	generateApiDocumentation.set(true)
+	generateModelDocumentation.set(true)
 }
 
 sourceSets {
 	main {
 		java {
 			srcDirs(
-				"${layout.buildDirectory.get()}/generated/api/src/main/java/",
+				"${layout.buildDirectory.get()}/generated/api",
 				"${layout.buildDirectory.get()}/generated/jooq"
 			)
 		}

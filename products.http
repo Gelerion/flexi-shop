@@ -1,6 +1,14 @@
 ###
 GET http://localhost:8080/products/2
-
-
-
 ###
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+  "name": "Samsung S24",
+  "description": "Flagship Samsung smartphone with powerful features.",
+  "price": 899.99,
+  "category": "Electronics",
+  "subCategory": "Smartphones",
+  "brand": "Samsung"
+}

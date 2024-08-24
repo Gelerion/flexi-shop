@@ -3,13 +3,14 @@ package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
-import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeEntity;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import org.jooq.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.*;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ImageTable.IMAGE;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable.PRODUCT;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.SpecificationTable.SPECIFICATION;
@@ -58,39 +59,16 @@ public class ProductRepositoryJooq implements ProductRepository {
 
         @Override
         public Optional<ProductCompositeEntity> findById(int productId) {
-            Field<List<ImageEntity>> images = multiset(
-                    selectFrom(IMAGE)
-                            .where(IMAGE.PRODUCT_ID.eq(PRODUCT.ID)))
-                    .as("images")
-                    .convertFrom(r -> r.into(ImageEntity.class));
             return dsl.select(
-                            PRODUCT.convertFrom(r -> r.into(ProductEntity.class)),
+                            PRODUCT.convertFrom(toProductEntity),
                             // implicit join https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/implicit-join/
-                            PRODUCT.category()
-                                    .as("category")
-                                    .convertFrom(r -> r.into(CategoryEntity.class)),
-                            PRODUCT.subCategory()
-                                    .as("sub_category")
-                                    .convertFrom(r -> r.into(SubCategoryEntity.class)),
-                            PRODUCT.brand()
-                                    .as("brand")
-                                    .convertFrom(r -> r.into(BrandEntity.class)),
-                            multiset(
-                                    selectFrom(SPECIFICATION)
-                                            .where(SPECIFICATION.PRODUCT_ID.eq(PRODUCT.ID)))
-                                    .as("specifications")
-                                    .convertFrom(r -> r.into(SpecificationEntity.class)),
+                            PRODUCT.category().as("category").convertFrom(toCategoryEntity),
+                            PRODUCT.subCategory().as("sub_category").convertFrom(toSubCategoryEntity),
+                            PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
+                            multisets.SPECIFICATIONS,
                             multisets.IMAGES,
-                            multiset(
-                                    selectFrom(TAG)
-                                            .where(TAG.PRODUCT_ID.eq(PRODUCT.ID)))
-                                    .as("tags")
-                                    .convertFrom(r -> r.into(TagEntity.class)),
-                            multiset(
-                                    selectFrom(VARIANT)
-                                            .where(VARIANT.PRODUCT_ID.eq(PRODUCT.ID)))
-                                    .as("variants")
-                                    .convertFrom(r -> r.into(VariantEntity.class))
+                            multisets.TAGS,
+                            multisets.VARIANTS
                     )
                     .from(PRODUCT)
                     .where(PRODUCT.ID.eq(productId))
@@ -99,10 +77,28 @@ public class ProductRepositoryJooq implements ProductRepository {
     }
 
     private static class multisets {
+        private static final Field<List<SpecificationEntity>> SPECIFICATIONS = multiset(
+                selectFrom(SPECIFICATION)
+                        .where(SPECIFICATION.PRODUCT_ID.eq(PRODUCT.ID)))
+                .as("specifications")
+                .convertFrom(r -> r.into(SpecificationEntity.class));
+
         private static final Field<List<ImageEntity>> IMAGES = multiset(
                 selectFrom(IMAGE)
                         .where(IMAGE.PRODUCT_ID.eq(PRODUCT.ID)))
                 .as("images")
                 .convertFrom(r -> r.into(ImageEntity.class));
+
+        private static final Field<List<TagEntity>> TAGS = multiset(
+                selectFrom(TAG)
+                        .where(TAG.PRODUCT_ID.eq(PRODUCT.ID)))
+                .as("tags")
+                .convertFrom(r -> r.into(TagEntity.class));
+
+        private static final Field<List<VariantEntity>> VARIANTS = multiset(
+                selectFrom(VARIANT)
+                        .where(VARIANT.PRODUCT_ID.eq(PRODUCT.ID)))
+                .as("variants")
+                .convertFrom(r -> r.into(VariantEntity.class));
     }
 }

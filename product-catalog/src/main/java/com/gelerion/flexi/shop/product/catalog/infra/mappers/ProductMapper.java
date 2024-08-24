@@ -1,7 +1,7 @@
 package com.gelerion.flexi.shop.product.catalog.infra.mappers;
 
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
-import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeEntity;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.models.ImageResource;
 import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
 import com.gelerion.flexi.shop.product.catalog.models.SpecificationResource;

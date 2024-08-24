@@ -1,4 +1,4 @@
-package com.gelerion.flexi.shop.product.catalog.domain.repositories.entities;
+package com.gelerion.flexi.shop.product.catalog.domain.entities;
 
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 

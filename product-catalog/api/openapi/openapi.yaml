@@ -132,12 +132,13 @@ components:
       type: object
       properties:
         productId:
-          type: number
-          format: integer
+          type: integer
+          format: int64
           description: Unique identifier of the product
         name:
           type: string
           description: Name of the product
+          x-field-extra-annotation: "@NotNull\n  @Size(min=5, max=200)"
         description:
           type: string
           description: Description of the product
@@ -164,6 +165,7 @@ components:
             $ref: '#/components/schemas/ImageResource'
         stock:
           type: integer
+          format: int64
           description: Available stock for the product
         tags:
           type: array

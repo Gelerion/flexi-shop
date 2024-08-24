@@ -1,7 +1,7 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories;
 
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
-import com.gelerion.flexi.shop.product.catalog.domain.repositories.entities.ProductCompositeEntity;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 
 import java.util.Optional;
 
