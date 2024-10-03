@@ -1,6 +1,12 @@
 import org.jooq.meta.jaxb.MatcherTransformType
 import java.util.Properties
 
+buildscript {
+	dependencies {
+		classpath("org.flywaydb:flyway-database-postgresql:10.10.0")
+	}
+}
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.3.1"
@@ -9,6 +15,7 @@ plugins {
 	id("org.openapi.generator") version "7.7.0"
 	id("idea")
 	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
+	id("org.flywaydb.flyway") version "10.10.0"
 //	kotlin("jvm")
 }
 
@@ -17,6 +24,10 @@ version = "0.0.1-SNAPSHOT"
 
 val config = Properties().apply {
 	load(file("../.env").inputStream())
+}
+
+object Versions {
+	const val logbook = "3.9.0"
 }
 
 java {
@@ -46,10 +57,16 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
+	// Spring
+	implementation("org.springframework.boot:spring-boot-starter-aop")
+
 	// Monitoring
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("io.micrometer:micrometer-tracing-bridge-brave")
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+	// Logging
+	implementation("org.zalando:logbook-spring-boot-starter:${Versions.logbook}")
 
 	// Persistence
 	implementation("org.springframework.boot:spring-boot-starter-jooq")
@@ -102,7 +119,7 @@ openApiGenerate {
 		"interfaceOnly" to "true", // Do not generate implementations
 		"openApiNullable" to "false", // Do not annotate with custom nullable annotation
 		"skipDefaultInterface" to "true", // Do not generate stub implementations
-		"additionalModelTypeAnnotations" to "@lombok.Data @lombok.AllArgsConstructor @lombok.NoArgsConstructor", // Add Lombok annotations
+		"additionalModelTypeAnnotations" to "@lombok.Data @lombok.AllArgsConstructor", // Add Lombok annotations
 		"useTags" to "true", // Generate one interface per tag
 		"documentationProvider" to "none", // No documentation provider
 		"useSwaggerUI" to "false", // Do not use Swagger UI
@@ -186,6 +203,15 @@ jooq {
 			}
 		}
 	}
+}
+
+flyway {
+	driver = "org.postgresql.Driver"
+	url = "jdbc:postgresql://localhost:5432/product_catalog"
+	user = config["DB_USER"] as String
+	password = config["DB_PASSWORD"] as String
+	locations = arrayOf("filesystem:src/main/resources/db/migration")
+	cleanDisabled = false
 }
 
 //tasks.contractTest {

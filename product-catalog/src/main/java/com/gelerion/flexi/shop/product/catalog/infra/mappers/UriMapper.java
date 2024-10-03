@@ -12,4 +12,8 @@ public class UriMapper {
         return new URI(uri);
     }
 
+    public String toUri(URI uri) {
+        return uri.toString();
+    }
+
 }

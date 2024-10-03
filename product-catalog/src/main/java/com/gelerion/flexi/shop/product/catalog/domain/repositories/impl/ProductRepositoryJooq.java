@@ -4,6 +4,7 @@ import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.*;
 import org.springframework.stereotype.Repository;
 
@@ -30,11 +31,11 @@ public class ProductRepositoryJooq implements ProductRepository {
     }
 
     @Override
-    public ProductRecord save(ProductRecord product) {
+    public ProductEntity save(ProductEntity product) {
         return dsl.insertInto(PRODUCT)
-                .set(product)
+                .set(dsl.newRecord(PRODUCT, product))
                 .returning()
-                .fetchOne();
+                .fetchOneInto(ProductEntity.class);
     }
 
     @Override

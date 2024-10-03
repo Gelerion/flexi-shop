@@ -11,25 +11,31 @@ import org.mapstruct.MappingConstants.ComponentModel;
 
 @Mapper(
         componentModel = ComponentModel.SPRING,
-        uses = UriMapper.class
+        uses = { UriMapper.class, TagMapper.class, SpecificationMapper.class }
 )
 public interface ProductMapper {
 
-    @Mapping(source = "product", target = ".")
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "category.name", target = "category")
-    @Mapping(source = "subCategory.name", target = "subCategory")
-    @Mapping(source = "brand.name", target = "brand")
-    ProductResource toResource(ProductCompositeEntity entity);
-
-    SpecificationResource toSpecificationResource(SpecificationEntity specification);
-
-    ImageResource toImageResource(ImageEntity image);
-
-    VariantResource toVariantResource(VariantEntity variant);
-
-    default String map(TagEntity tag) {
-        return tag.tag();
-    }
+//    @Mapping(source = "product", target = ".")
+//    @Mapping(source = "product.id", target = "productId")
+//    @Mapping(source = "category.name", target = "category")
+//    @Mapping(source = "subCategory.name", target = "subCategory")
+//    @Mapping(source = "brand.name", target = "brand")
+//    ProductResource toResource(ProductCompositeEntity entity);
+//
+//    SpecificationResource toSpecificationResource(SpecificationEntity specification);
+//
+//    ImageResource toImageResource(ImageEntity image);
+//
+//    VariantResource toVariantResource(VariantEntity variant);
+//
+//    @Mapping(source = "productId", target = "product.id")
+//    @Mapping(source = "name", target = "product.name")
+//    @Mapping(source = "description", target = "product.description")
+//    @Mapping(source = "price", target = "product.price")
+//    @Mapping(source = "stock", target = "product.stock")
+//    @Mapping(source = "category", target = "category.name")
+//    @Mapping(source = "subCategory", target = "subCategory.name")
+//    @Mapping(source = "brand", target = "brand.name")
+//    ProductCompositeEntity toProductEntity(ProductResource product);
 
 }

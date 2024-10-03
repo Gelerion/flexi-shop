@@ -7,3 +7,10 @@ logging:
   level:
     # Show SQL statements
     org.jooq.tools.LoggerListener: DEBUG
+    # Show Requests
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.zalando.logbook: TRACE
+
+logbook:
+  filter:
+    enabled: true

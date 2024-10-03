@@ -1,4 +1,4 @@
-package com.gelerion.flexi.shop.product.catalog.controllers.advice;
+package com.gelerion.flexi.shop.product.catalog.api.advice;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 

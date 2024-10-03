@@ -1,64 +1,43 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
   title: FlexiShop Product Service API
-  description: API documentation for the Product Service of FlexiShop
-  version: 1.0.0
-tags:
-  - name: products
+  version: '1.0.0'
+  description: API specification for FlexiShop's Product Service.
+servers:
+  - url: https://api.flexishop.com/v1
+    description: Production server
 paths:
   /products:
     get:
-      summary: Search Products
-      description: Retrieves a list of products based on a search query
-      operationId: searchProducts
       tags:
-        - products
+        - Products
+      summary: Retrieve a list of ProductResources
+      operationId: listProducts
       parameters:
-        - in: query
-          name: filter
-          style: deepObject
-          explode: true
-          schema:
-            $ref: '#/components/schemas/ProductCriteria'
-          required: false
-          description: Filter products by any property and an operator
-        - in: query
-          name: q
-          schema:
-            type: string
-          required: false
-          description: Free text search query string
-        - name: sort
-          in: query
-          description: Field to sort by
-          required: false
-          schema:
-            type: string
-            example: "price"
-        - name: order
-          in: query
-          description: Order of sorting
-          required: false
-          schema:
-            type: string
-            enum: [asc, desc]
-            example: "asc"
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/SearchQueryParam'
+        - $ref: '#/components/parameters/PriceParam'
+        - $ref: '#/components/parameters/RatingParam'
+        - $ref: '#/components/parameters/SortByParam'
       responses:
         '200':
-          description: List of Products
+          description: A list of ProductResources
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductResource'
+                $ref: '#/components/schemas/ProductResourceList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
-      summary: Create Product
-      description: Creates a new product.
-      operationId: createProduct
       tags:
-        - products
+        - Products
+      summary: Create a new ProductResource
+      operationId: createProduct
       requestBody:
+        description: ProductResource to create
         required: true
         content:
           application/json:
@@ -66,50 +45,47 @@ paths:
               $ref: '#/components/schemas/ProductResource'
       responses:
         '201':
-          description: Product created successfully
+          description: ProductResource created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResource'
+          headers:
+            Location:
+              description: URL of the created ProductResource
+              schema:
+                type: string
+                format: uri
         '400':
-          description: Invalid input
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /products/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/ProductIdParam'
     get:
-      summary: Get Product Details
-      description: Retrieves detailed information about a product by its ID.
-      operationId: getProduct
       tags:
-        - products
-      parameters:
-        - in: path
-          name: productId
-          schema:
-            type: string
-          required: true
-          description: ID of the product to retrieve
+        - Products
+      summary: Retrieve a ProductResource by ID
+      operationId: getProductById
       responses:
         '200':
-          description: Product Details
+          description: ProductResource details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResource'
         '404':
-          description: Product not found
-    patch:
-      summary: Update Product
-      description: Updates an existing product.
-      operationId: updateProduct
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
       tags:
-        - products
-      parameters:
-        - in: path
-          name: productId
-          schema:
-            type: string
-          required: true
-          description: ID of the product to update
+        - Products
+      summary: Update an existing ProductResource
+      operationId: updateProduct
       requestBody:
+        description: Updated ProductResource
         required: true
         content:
           application/json:
@@ -117,114 +93,770 @@ paths:
               $ref: '#/components/schemas/ProductResource'
       responses:
         '200':
-          description: Product updated successfully
+          description: ProductResource updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResource'
         '400':
-          description: Invalid input
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Product not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Products
+      summary: Delete a ProductResource
+      operationId: deleteProduct
+      responses:
+        '204':
+          description: ProductResource deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /brands:
+    get:
+      tags:
+        - Brands
+      summary: Retrieve a list of BrandResources
+      operationId: listBrands
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: A list of BrandResources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResourceList'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Brands
+      summary: Create a new BrandResource
+      operationId: createBrand
+      requestBody:
+        description: BrandResource to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandResource'
+      responses:
+        '201':
+          description: BrandResource created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResource'
+          headers:
+            Location:
+              description: URL of the created BrandResource
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /brands/{brandName}:
+    parameters:
+      - $ref: '#/components/parameters/BrandNameParam'
+    get:
+      tags:
+        - Brands
+      summary: Retrieve a BrandResource by name
+      operationId: getBrandByName
+      responses:
+        '200':
+          description: BrandResource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Brands
+      summary: Update an existing BrandResource
+      operationId: updateBrand
+      requestBody:
+        description: Updated BrandResource
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandResource'
+      responses:
+        '200':
+          description: BrandResource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Brands
+      summary: Delete a BrandResource
+      operationId: deleteBrand
+      responses:
+        '204':
+          description: BrandResource deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Retrieve a list of CategoryResources
+      operationId: listCategories
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: A list of CategoryResources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResourceList'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Categories
+      summary: Create a new CategoryResource
+      operationId: createCategory
+      requestBody:
+        description: CategoryResource to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryResource'
+      responses:
+        '201':
+          description: CategoryResource created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+          headers:
+            Location:
+              description: URL of the created CategoryResource
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /categories/{categoryName}:
+    parameters:
+      - $ref: '#/components/parameters/CategoryNameParam'
+    get:
+      tags:
+        - Categories
+      summary: Retrieve a CategoryResource by name
+      operationId: getCategoryByName
+      responses:
+        '200':
+          description: CategoryResource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Categories
+      summary: Update an existing CategoryResource
+      operationId: updateCategory
+      requestBody:
+        description: Updated CategoryResource
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryResource'
+      responses:
+        '200':
+          description: CategoryResource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Categories
+      summary: Delete a CategoryResource
+      operationId: deleteCategory
+      responses:
+        '204':
+          description: CategoryResource deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /tags:
+    get:
+      tags:
+        - Tags
+      summary: Retrieve a list of TagResources
+      operationId: listTags
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: A list of TagResources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResourceList'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Tags
+      summary: Create a new TagResource
+      operationId: createTag
+      requestBody:
+        description: TagResource to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagResource'
+      responses:
+        '201':
+          description: TagResource created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+          headers:
+            Location:
+              description: URL of the created TagResource
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /tags/{tagName}:
+    parameters:
+      - $ref: '#/components/parameters/TagNameParam'
+    get:
+      tags:
+        - Tags
+      summary: Retrieve a TagResource by name
+      operationId: getTagByName
+      responses:
+        '200':
+          description: TagResource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Tags
+      summary: Update an existing TagResource
+      operationId: updateTag
+      requestBody:
+        description: Updated TagResource
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagResource'
+      responses:
+        '200':
+          description: TagResource updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Tags
+      summary: Delete a TagResource
+      operationId: deleteTag
+      responses:
+        '204':
+          description: TagResource deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
+  parameters:
+    ProductIdParam:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      description: The ID of the ProductResource
+    BrandNameParam:
+      name: brandName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The name of the BrandResource
+    CategoryNameParam:
+      name: categoryName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The name of the CategoryResource
+    TagNameParam:
+      name: tagName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The name of the TagResource
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Maximum number of items to return
+    OffsetParam:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Number of items to skip before starting to collect the result set
+    SearchQueryParam:
+      name: q
+      in: query
+      schema:
+        type: string
+      description: Search query string
+    PriceParam:
+      name: price
+      in: query
+      style: deepObject
+      explode: true
+      schema:
+        $ref: '#/components/schemas/PriceCriteria'
+      description: Price filter criteria
+    RatingParam:
+      name: rating
+      in: query
+      style: deepObject
+      explode: true
+      schema:
+        $ref: '#/components/schemas/RatingCriteria'
+      description: Rating filter criteria
+    SortByParam:
+      name: sort_by
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+:(asc|desc)$'
+        example:
+          - 'price:asc'
+          - 'name:desc'
+      explode: false
+      description: >
+        Sorting fields and order. Each value must be in the format `field:asc` or `field:desc`.
+        Multiple fields can be specified by repeating the parameter.
   schemas:
     ProductResource:
       type: object
+      required:
+        - name
+        - description
+        - price
+        - status
+        - inventoryQuantity
       properties:
-        productId:
+        id:
           type: integer
-          format: int64
-          description: Unique identifier of the product
+          readOnly: true
+          example: 1
         name:
           type: string
-          description: Name of the product
-          x-field-extra-annotation: "@NotNull\n  @Size(min=5, max=200)"
+          maxLength: 255
+          example: 'Wireless Mouse'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         description:
           type: string
-          description: Description of the product
+          example: 'A high-quality wireless mouse with ergonomic design.'
+          x-field-extra-annotation: "@NotNull"
+        brand:
+          type: string
+          example: 'Logitech'
         price:
           type: number
           format: float
-          description: Price of the product
-        category:
+          minimum: 0.0
+          example: 29.99
+          x-field-extra-annotation: "@NotNull"
+        status:
           type: string
-          description: Category of the product
-        subCategory:
-          type: string
-          description: Subcategory of the product
-        brand:
-          type: string
-          description: Brand of the product
-        specifications:
-          type: array
-          items:
-            $ref: '#/components/schemas/SpecificationResource'
-        images:
-          type: array
-          items:
-            $ref: '#/components/schemas/ImageResource'
-        stock:
+          enum: [active, inactive, discontinued]
+          default: active
+          example: 'active'
+          x-field-extra-annotation: "@NotNull"
+        inventoryQuantity:
           type: integer
-          format: int64
-          description: Available stock for the product
+          minimum: 0
+          default: 0
+          example: 150
+          x-field-extra-annotation: "@NotNull"
+        categories:
+          type: array
+          items:
+            type: string
+          example: ['Electronics', 'Accessories']
         tags:
           type: array
           items:
             type: string
-          description: Tags associated with the product
-        variants:
+          example: ['wireless', 'mouse']
+        images:
           type: array
           items:
-            $ref: '#/components/schemas/VariantResource'
-    SpecificationResource:
+            $ref: '#/components/schemas/ImageResource'
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecificationResource'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    ProductResourceList:
       type: object
+      required:
+        - totalItems
+        - items
       properties:
-        key:
-          type: string
-          description: Specification key
-        value:
-          type: string
-          description: Specification value
-    ImageResource:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-          description: URL of the product image
-    VariantResource:
-      type: object
-      properties:
-        color:
-          type: string
-          description: Color of the product variant
-        stock:
+        totalItems:
           type: integer
-          format: int64
-          description: Available stock for the variant
-    ProductCriteria:
+          example: 100
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductResource'
+    BrandResource:
       type: object
+      required:
+        - name
       properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 2
         name:
           type: string
-        category:
-          type: object
-          properties:
-            eq:
-              type: string
-        price:
-          $ref: '#/components/schemas/SearchOperators'
-        rating:
-          $ref: '#/components/schemas/SearchOperators'
-    SearchOperators:
+          maxLength: 255
+          example: 'Logitech'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+        description:
+          type: string
+          nullable: true
+          example: 'A leading manufacturer of computer peripherals.'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    BrandResourceList:
       type: object
+      required:
+        - totalItems
+        - items
       properties:
-        gt:
-          type: number
-          format: float
-        lt:
-          type: number
-          format: float
+        totalItems:
+          type: integer
+          example: 20
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrandResource'
+    CategoryResource:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 3
+        name:
+          type: string
+          maxLength: 255
+          example: 'Electronics'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+        parent:
+          type: string
+          nullable: true
+          example: 'Technology'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    CategoryResourceList:
+      type: object
+      required:
+        - totalItems
+        - items
+      properties:
+        totalItems:
+          type: integer
+          example: 15
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryResource'
+    TagResource:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 4
+        name:
+          type: string
+          maxLength: 255
+          example: 'wireless'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    TagResourceList:
+      type: object
+      required:
+        - totalItems
+        - items
+      properties:
+        totalItems:
+          type: integer
+          example: 50
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagResource'
+    ImageResource:
+      type: object
+      required:
+        - imageUrl
+        - isPrimary
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 10
+        imageUrl:
+          type: string
+          format: uri
+          example: 'https://cdn.flexishop.com/images/product1.jpg'
+          x-field-extra-annotation: "@NotNull"
+        isPrimary:
+          type: boolean
+          default: false
+          example: true
+          x-field-extra-annotation: "@NotNull"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    SpecificationResource:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 5
+        name:
+          type: string
+          maxLength: 255
+          example: 'Battery Life'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+        value:
+          type: string
+          maxLength: 255
+          example: 'Up to 12 months'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2023-10-02T12:00:00Z'
+    PriceCriteria:
+      type: object
+      oneOf:
+        - required: ['eq']
+        - required: ['gte']
+        - required: ['lte']
+        - required: ['gte', 'lte']
+      properties:
         eq:
           type: number
           format: float
+          minimum: 0
+        gte:
+          type: number
+          format: float
+          minimum: 0
+        lte:
+          type: number
+          format: float
+          minimum: 0
+      additionalProperties: false
+    RatingCriteria:
+      type: object
+      oneOf:
+        - required: ['eq']
+        - required: ['gte']
+        - required: ['lte']
+        - required: ['gte', 'lte']
+      properties:
+        eq:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+        gte:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+        lte:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+      additionalProperties: false
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2023-10-03T15:23:01.456+00:00'
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: 'Bad Request'
+        message:
+          type: string
+          example: 'Validation failed for object=`productResource`. Error count: 1'
+        path:
+          type: string
+          example: '/api/v1/products'
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+security:
+  - BearerAuth: []

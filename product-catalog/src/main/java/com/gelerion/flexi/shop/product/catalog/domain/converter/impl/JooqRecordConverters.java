@@ -24,6 +24,4 @@ public class JooqRecordConverters {
     public static final RecordConverter<BrandRecord, BrandEntity> toBrandEntity =
             r -> r.into(BrandEntity.class);
 
-
-
 }
