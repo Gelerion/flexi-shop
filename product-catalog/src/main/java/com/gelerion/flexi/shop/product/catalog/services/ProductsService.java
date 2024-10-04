@@ -1,5 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.services;
 
+import com.gelerion.flexi.shop.product.catalog.api.includes.IncludeOption;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
 import com.gelerion.flexi.shop.product.catalog.infra.mappers.ProductMapper;
 import com.gelerion.flexi.shop.product.catalog.models.CompositeProductResource;
@@ -9,6 +10,7 @@ import org.jooq.exception.NoDataFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -22,10 +24,10 @@ public class ProductsService {
         this.productMapper = productMapper;
     }
 
-    public CompositeProductResource getProduct(UUID productId) {
+    public CompositeProductResource getProduct(UUID productId, Set<IncludeOption> includes) {
         return productRepository
                 .composite()
-                .findById(productId)
+                .findById(productId, includes)
                 .map(productMapper::toResource)
                 .orElseThrow(() -> new NoDataFoundException("Product with id " + productId + " not found"));
     }

@@ -1,7 +1,8 @@
 spring:
-    application:
+  application:
       name: product-catalog
-
+  jackson:
+    default-property-inclusion: non_empty
 
 logging:
   level:

@@ -2,7 +2,7 @@
 GET http://localhost:8080/products/b0c0fb22-2b3c-4845-8e99-4380e266de3f
 
 ### Including sub-resources
-GET http://localhost:8080/products/b0c0fb22-2b3c-4845-8e99-4380e266de3f?include=categories
+GET http://localhost:8080/products/b0c0fb22-2b3c-4845-8e99-4380e266de3f?include=categories,tags
 
 ###
 POST /products

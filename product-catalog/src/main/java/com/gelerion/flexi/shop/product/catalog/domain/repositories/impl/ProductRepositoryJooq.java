@@ -1,25 +1,25 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 
+import com.gelerion.flexi.shop.product.catalog.api.includes.IncludeOption;
+import com.gelerion.flexi.shop.product.catalog.common.JooqHelpers;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
-import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
-import org.jetbrains.annotations.Nullable;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.*;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.CategoryTable.CATEGORY;
+import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.toBrandEntity;
+import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.toProductEntity;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ImageTable.IMAGE;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductCategoriesTable.PRODUCT_CATEGORIES;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable.PRODUCT;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTagsTable.PRODUCT_TAGS;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.SpecificationTable.SPECIFICATION;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.TagTable.TAG;
 import static org.jooq.Records.mapping;
 import static org.jooq.impl.DSL.*;
 
@@ -62,6 +62,25 @@ public class ProductRepositoryJooq implements ProductRepository {
         }
 
         @Override
+        public Optional<ProductCompositeEntity> findById(UUID productId, Set<IncludeOption> includes) {
+            return dsl.select(
+                            PRODUCT.convertFrom(toProductEntity),
+                            PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
+                            includes.contains(IncludeOption.CATEGORIES) ?
+                                    multisets.CATEGORIES : JooqHelpers.multisets.empty(CategoryEntity.class),
+                            includes.contains(IncludeOption.SPECIFICATIONS) ?
+                                    multisets.SPECIFICATIONS : JooqHelpers.multisets.empty(SpecificationEntity.class),
+                            includes.contains(IncludeOption.IMAGES) ?
+                                    multisets.IMAGES : JooqHelpers.multisets.empty(ImageEntity.class),
+                            includes.contains(IncludeOption.TAGS) ?
+                                    multisets.TAGS : JooqHelpers.multisets.empty(TagEntity.class)
+                    )
+                    .from(PRODUCT)
+                    .where(PRODUCT.ID.eq(productId))
+                    .fetchOptional(mapping(ProductCompositeEntity::new));
+        }
+
+        @Override
         public Optional<ProductCompositeEntity> findById(UUID productId) {
             return dsl.select(
                             PRODUCT.convertFrom(toProductEntity),
@@ -93,8 +112,7 @@ public class ProductRepositoryJooq implements ProductRepository {
 
         private static final Field<List<TagEntity>> TAGS = multiset(
                 select(PRODUCT.tag().asterisk())
-                        .from(PRODUCT.tag())
-        )
+                        .from(PRODUCT.tag()))
                 .as("tags")
                 .convertFrom(r -> r.into(TagEntity.class));
 
