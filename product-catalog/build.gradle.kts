@@ -106,6 +106,17 @@ dependencyManagement {
 	}
 }
 
+tasks.withType<JavaCompile> {
+	options.encoding = "UTF-8"
+	options.compilerArgs.addAll(listOf(
+		"-Xlint:unchecked",  // Enables warnings for unchecked operations
+		"-Xlint:deprecation", // Enables warnings for deprecated API usage
+		"-Amapstruct.suppressGeneratorTimestamp=true", // Suppress timestamp in generated code
+		"-Amapstruct.suppressGeneratorVersionInfoComment=true", // Suppress version info in comments
+		"-Amapstruct.verbose=true" // Enable verbose output for MapStruct
+	))
+}
+
 //contracts {
 //}
 

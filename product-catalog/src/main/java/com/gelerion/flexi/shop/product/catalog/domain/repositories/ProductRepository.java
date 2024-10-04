@@ -5,17 +5,18 @@ import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.Pr
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ProductRepository {
 
     ProductEntity save(ProductEntity product);
 
-    Optional<ProductRecord> findById(int productId);
+    Optional<ProductRecord> findById(UUID productId);
 
     CompositeProductRepository composite();
 
     interface CompositeProductRepository {
-        Optional<ProductCompositeEntity> findById(int productId);
+        Optional<ProductCompositeEntity> findById(UUID productId);
     }
 
 }

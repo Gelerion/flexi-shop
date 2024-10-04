@@ -11,7 +11,7 @@ paths:
     get:
       tags:
         - Products
-      summary: Retrieve a list of ProductResources
+      summary: Retrieve a list of products
       operationId: listProducts
       parameters:
         - $ref: '#/components/parameters/LimitParam'
@@ -22,11 +22,11 @@ paths:
         - $ref: '#/components/parameters/SortByParam'
       responses:
         '200':
-          description: A list of ProductResources
+          description: A paginated list of products
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResourceList'
+                $ref: '#/components/schemas/ProductResourcePaginated'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -34,10 +34,10 @@ paths:
     post:
       tags:
         - Products
-      summary: Create a new ProductResource
+      summary: Create a new product
       operationId: createProduct
       requestBody:
-        description: ProductResource to create
+        description: Product to create
         required: true
         content:
           application/json:
@@ -45,14 +45,14 @@ paths:
               $ref: '#/components/schemas/ProductResource'
       responses:
         '201':
-          description: ProductResource created successfully
+          description: Product created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResource'
           headers:
             Location:
-              description: URL of the created ProductResource
+              description: URL of the created product
               schema:
                 type: string
                 format: uri
@@ -66,11 +66,11 @@ paths:
     get:
       tags:
         - Products
-      summary: Retrieve a ProductResource by ID
+      summary: Retrieve a product by ID
       operationId: getProductById
       responses:
         '200':
-          description: ProductResource details
+          description: Product details
           content:
             application/json:
               schema:
@@ -79,21 +79,21 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    put:
+    patch:
       tags:
         - Products
-      summary: Update an existing ProductResource
+      summary: Partially update an existing product
       operationId: updateProduct
       requestBody:
-        description: Updated ProductResource
+        description: Fields to update in the product
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductResource'
+              $ref: '#/components/schemas/ProductResourceUpdateRequest'
       responses:
         '200':
-          description: ProductResource updated successfully
+          description: Product updated successfully
           content:
             application/json:
               schema:
@@ -107,11 +107,11 @@ paths:
     delete:
       tags:
         - Products
-      summary: Delete a ProductResource
+      summary: Delete a product
       operationId: deleteProduct
       responses:
         '204':
-          description: ProductResource deleted successfully
+          description: Product deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -120,27 +120,27 @@ paths:
     get:
       tags:
         - Brands
-      summary: Retrieve a list of BrandResources
+      summary: Retrieve a list of brands
       operationId: listBrands
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/OffsetParam'
       responses:
         '200':
-          description: A list of BrandResources
+          description: A paginated list of brands
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BrandResourceList'
+                $ref: '#/components/schemas/BrandResourcePaginated'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
         - Brands
-      summary: Create a new BrandResource
+      summary: Create a new brand
       operationId: createBrand
       requestBody:
-        description: BrandResource to create
+        description: Brand to create
         required: true
         content:
           application/json:
@@ -148,14 +148,14 @@ paths:
               $ref: '#/components/schemas/BrandResource'
       responses:
         '201':
-          description: BrandResource created successfully
+          description: Brand created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrandResource'
           headers:
             Location:
-              description: URL of the created BrandResource
+              description: URL of the created brand
               schema:
                 type: string
                 format: uri
@@ -169,11 +169,11 @@ paths:
     get:
       tags:
         - Brands
-      summary: Retrieve a BrandResource by name
+      summary: Retrieve a brand by name
       operationId: getBrandByName
       responses:
         '200':
-          description: BrandResource details
+          description: Brand details
           content:
             application/json:
               schema:
@@ -185,10 +185,10 @@ paths:
     put:
       tags:
         - Brands
-      summary: Update an existing BrandResource
+      summary: Update an existing brand
       operationId: updateBrand
       requestBody:
-        description: Updated BrandResource
+        description: Updated brand
         required: true
         content:
           application/json:
@@ -196,7 +196,7 @@ paths:
               $ref: '#/components/schemas/BrandResource'
       responses:
         '200':
-          description: BrandResource updated successfully
+          description: Brand updated successfully
           content:
             application/json:
               schema:
@@ -210,11 +210,11 @@ paths:
     delete:
       tags:
         - Brands
-      summary: Delete a BrandResource
+      summary: Delete a brand
       operationId: deleteBrand
       responses:
         '204':
-          description: BrandResource deleted successfully
+          description: Brand deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -223,27 +223,27 @@ paths:
     get:
       tags:
         - Categories
-      summary: Retrieve a list of CategoryResources
+      summary: Retrieve a list of categories
       operationId: listCategories
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/OffsetParam'
       responses:
         '200':
-          description: A list of CategoryResources
+          description: A paginated list of categories
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CategoryResourceList'
+                $ref: '#/components/schemas/CategoryResourcePaginated'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
         - Categories
-      summary: Create a new CategoryResource
+      summary: Create a new category
       operationId: createCategory
       requestBody:
-        description: CategoryResource to create
+        description: Category to create
         required: true
         content:
           application/json:
@@ -251,14 +251,14 @@ paths:
               $ref: '#/components/schemas/CategoryResource'
       responses:
         '201':
-          description: CategoryResource created successfully
+          description: Category created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryResource'
           headers:
             Location:
-              description: URL of the created CategoryResource
+              description: URL of the created category
               schema:
                 type: string
                 format: uri
@@ -272,11 +272,11 @@ paths:
     get:
       tags:
         - Categories
-      summary: Retrieve a CategoryResource by name
+      summary: Retrieve a category by name
       operationId: getCategoryByName
       responses:
         '200':
-          description: CategoryResource details
+          description: Category details
           content:
             application/json:
               schema:
@@ -288,10 +288,10 @@ paths:
     put:
       tags:
         - Categories
-      summary: Update an existing CategoryResource
+      summary: Update an existing category
       operationId: updateCategory
       requestBody:
-        description: Updated CategoryResource
+        description: Updated category
         required: true
         content:
           application/json:
@@ -299,7 +299,7 @@ paths:
               $ref: '#/components/schemas/CategoryResource'
       responses:
         '200':
-          description: CategoryResource updated successfully
+          description: Category updated successfully
           content:
             application/json:
               schema:
@@ -313,11 +313,11 @@ paths:
     delete:
       tags:
         - Categories
-      summary: Delete a CategoryResource
+      summary: Delete a category
       operationId: deleteCategory
       responses:
         '204':
-          description: CategoryResource deleted successfully
+          description: Category deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -326,27 +326,27 @@ paths:
     get:
       tags:
         - Tags
-      summary: Retrieve a list of TagResources
+      summary: Retrieve a list of tags
       operationId: listTags
       parameters:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/OffsetParam'
       responses:
         '200':
-          description: A list of TagResources
+          description: A paginated list of tags
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TagResourceList'
+                $ref: '#/components/schemas/TagResourcePaginated'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
         - Tags
-      summary: Create a new TagResource
+      summary: Create a new tag
       operationId: createTag
       requestBody:
-        description: TagResource to create
+        description: Tag to create
         required: true
         content:
           application/json:
@@ -354,14 +354,14 @@ paths:
               $ref: '#/components/schemas/TagResource'
       responses:
         '201':
-          description: TagResource created successfully
+          description: Tag created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TagResource'
           headers:
             Location:
-              description: URL of the created TagResource
+              description: URL of the created tag
               schema:
                 type: string
                 format: uri
@@ -375,11 +375,11 @@ paths:
     get:
       tags:
         - Tags
-      summary: Retrieve a TagResource by name
+      summary: Retrieve a tag by name
       operationId: getTagByName
       responses:
         '200':
-          description: TagResource details
+          description: Tag details
           content:
             application/json:
               schema:
@@ -391,10 +391,10 @@ paths:
     put:
       tags:
         - Tags
-      summary: Update an existing TagResource
+      summary: Update an existing tag
       operationId: updateTag
       requestBody:
-        description: Updated TagResource
+        description: Updated tag
         required: true
         content:
           application/json:
@@ -402,7 +402,7 @@ paths:
               $ref: '#/components/schemas/TagResource'
       responses:
         '200':
-          description: TagResource updated successfully
+          description: Tag updated successfully
           content:
             application/json:
               schema:
@@ -416,11 +416,11 @@ paths:
     delete:
       tags:
         - Tags
-      summary: Delete a TagResource
+      summary: Delete a tag
       operationId: deleteTag
       responses:
         '204':
-          description: TagResource deleted successfully
+          description: Tag deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -432,31 +432,30 @@ components:
       in: path
       required: true
       schema:
-        type: integer
-        format: int64
-        minimum: 1
-      description: The ID of the ProductResource
+        type: string
+        format: uuid
+      description: The UUID of the product
     BrandNameParam:
       name: brandName
       in: path
       required: true
       schema:
         type: string
-      description: The name of the BrandResource
+      description: The name of the brand
     CategoryNameParam:
       name: categoryName
       in: path
       required: true
       schema:
         type: string
-      description: The name of the CategoryResource
+      description: The name of the category
     TagNameParam:
       name: tagName
       in: path
       required: true
       schema:
         type: string
-      description: The name of the TagResource
+      description: The name of the tag
     LimitParam:
       name: limit
       in: query
@@ -522,18 +521,17 @@ components:
         - inventoryQuantity
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           readOnly: true
-          example: 1
+          example: '123e4567-e89b-12d3-a456-426614174000'
         name:
           type: string
           maxLength: 255
           example: 'Wireless Mouse'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         description:
           type: string
           example: 'A high-quality wireless mouse with ergonomic design.'
-          x-field-extra-annotation: "@NotNull"
         brand:
           type: string
           example: 'Logitech'
@@ -542,19 +540,16 @@ components:
           format: float
           minimum: 0.0
           example: 29.99
-          x-field-extra-annotation: "@NotNull"
         status:
           type: string
           enum: [active, inactive, discontinued]
           default: active
           example: 'active'
-          x-field-extra-annotation: "@NotNull"
         inventoryQuantity:
           type: integer
           minimum: 0
           default: 0
           example: 150
-          x-field-extra-annotation: "@NotNull"
         categories:
           type: array
           items:
@@ -583,7 +578,61 @@ components:
           format: date-time
           readOnly: true
           example: '2023-10-02T12:00:00Z'
-    ProductResourceList:
+    ProductResourceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          nullable: true
+          example: 'Wireless Mouse'
+        description:
+          type: string
+          nullable: true
+          example: 'An updated description.'
+        brand:
+          type: string
+          nullable: true
+          example: 'Logitech'
+        price:
+          type: number
+          format: float
+          minimum: 0.0
+          nullable: true
+          example: 29.99
+        status:
+          type: string
+          enum: [active, inactive, discontinued]
+          nullable: true
+          example: 'inactive'
+        inventoryQuantity:
+          type: integer
+          minimum: 0
+          nullable: true
+          example: 120
+        categories:
+          type: array
+          items:
+            type: string
+          nullable: true
+          example: ['Electronics', 'Accessories']
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+          example: ['wireless', 'mouse']
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImageResource'
+          nullable: true
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecificationResource'
+          nullable: true
+    ProductResourcePaginated:
       type: object
       required:
         - totalItems
@@ -609,7 +658,6 @@ components:
           type: string
           maxLength: 255
           example: 'Logitech'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         description:
           type: string
           nullable: true
@@ -624,7 +672,7 @@ components:
           format: date-time
           readOnly: true
           example: '2023-10-02T12:00:00Z'
-    BrandResourceList:
+    BrandResourcePaginated:
       type: object
       required:
         - totalItems
@@ -650,7 +698,6 @@ components:
           type: string
           maxLength: 255
           example: 'Electronics'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         parent:
           type: string
           nullable: true
@@ -665,7 +712,7 @@ components:
           format: date-time
           readOnly: true
           example: '2023-10-02T12:00:00Z'
-    CategoryResourceList:
+    CategoryResourcePaginated:
       type: object
       required:
         - totalItems
@@ -691,7 +738,6 @@ components:
           type: string
           maxLength: 255
           example: 'wireless'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         createdAt:
           type: string
           format: date-time
@@ -702,7 +748,7 @@ components:
           format: date-time
           readOnly: true
           example: '2023-10-02T12:00:00Z'
-    TagResourceList:
+    TagResourcePaginated:
       type: object
       required:
         - totalItems
@@ -729,12 +775,10 @@ components:
           type: string
           format: uri
           example: 'https://cdn.flexishop.com/images/product1.jpg'
-          x-field-extra-annotation: "@NotNull"
         isPrimary:
           type: boolean
           default: false
           example: true
-          x-field-extra-annotation: "@NotNull"
         createdAt:
           type: string
           format: date-time
@@ -759,12 +803,10 @@ components:
           type: string
           maxLength: 255
           example: 'Battery Life'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         value:
           type: string
           maxLength: 255
           example: 'Up to 12 months'
-          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
         createdAt:
           type: string
           format: date-time

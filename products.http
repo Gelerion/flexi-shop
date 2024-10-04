@@ -1,22 +1,33 @@
 ###
-GET http://localhost:8080/products/2
+GET http://localhost:8080/products/b0c0fb22-2b3c-4845-8e99-4380e266de3f
+
 ###
-POST http://localhost:8080/products
+POST /products
 Content-Type: application/json
 
 {
-  "productId": 1,
-  "name": "Samsung S24",
-  "description": "Flagship Samsung smartphone with powerful features.",
-  "price": 899.99,
-  "category": "Electronics",
-  "subCategory": "Smartphones",
-  "brand": "Samsung",
-  "specifications": [{
-    "key": "value",
-    "value": "100"
-  }],
-  "tags": [
-    "phone"
+  "name": "Ergonomic Keyboard",
+  "description": "A comfortable keyboard for long typing sessions.",
+  "brand": "Logitech",
+  "price": 49.99,
+  "status": "ACTIVE",
+  "inventoryQuantity": 100,
+  "categories": ["Electronics", "Accessories"],
+  "tags": ["keyboard", "ergonomic"],
+  "images": [
+    {
+      "imageUrl": "https://cdn.flexishop.com/images/keyboard.jpg",
+      "isPrimary": true
+    }
+  ],
+  "specifications": [
+    {
+      "name": "Connectivity",
+      "value": "Wireless"
+    },
+    {
+      "name": "Battery Life",
+      "value": "24 months"
+    }
   ]
 }

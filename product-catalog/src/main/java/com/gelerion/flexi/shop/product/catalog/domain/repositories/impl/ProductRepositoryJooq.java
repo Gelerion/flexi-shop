@@ -10,13 +10,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.*;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.CategoryTable.CATEGORY;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ImageTable.IMAGE;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductCategoriesTable.PRODUCT_CATEGORIES;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable.PRODUCT;
+import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTagsTable.PRODUCT_TAGS;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.SpecificationTable.SPECIFICATION;
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.TagTable.TAG;
-import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.VariantTable.VARIANT;
 import static org.jooq.Records.mapping;
 import static org.jooq.impl.DSL.*;
 
@@ -39,7 +42,7 @@ public class ProductRepositoryJooq implements ProductRepository {
     }
 
     @Override
-    public Optional<ProductRecord> findById(int productId) {
+    public Optional<ProductRecord> findById(UUID productId) {
         return dsl.selectFrom(PRODUCT)
                 .where(PRODUCT.ID.eq(productId))
                 .fetchOptional();
@@ -59,17 +62,15 @@ public class ProductRepositoryJooq implements ProductRepository {
         }
 
         @Override
-        public Optional<ProductCompositeEntity> findById(int productId) {
+        public Optional<ProductCompositeEntity> findById(UUID productId) {
             return dsl.select(
                             PRODUCT.convertFrom(toProductEntity),
                             // implicit join https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/implicit-join/
-                            PRODUCT.category().as("category").convertFrom(toCategoryEntity),
-                            PRODUCT.subCategory().as("sub_category").convertFrom(toSubCategoryEntity),
                             PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
+                            multisets.CATEGORIES,
                             multisets.SPECIFICATIONS,
                             multisets.IMAGES,
-                            multisets.TAGS,
-                            multisets.VARIANTS
+                            multisets.TAGS
                     )
                     .from(PRODUCT)
                     .where(PRODUCT.ID.eq(productId))
@@ -91,15 +92,16 @@ public class ProductRepositoryJooq implements ProductRepository {
                 .convertFrom(r -> r.into(ImageEntity.class));
 
         private static final Field<List<TagEntity>> TAGS = multiset(
-                selectFrom(TAG)
-                        .where(TAG.PRODUCT_ID.eq(PRODUCT.ID)))
+                select(PRODUCT.tag().asterisk())
+                        .from(PRODUCT.tag())
+        )
                 .as("tags")
                 .convertFrom(r -> r.into(TagEntity.class));
 
-        private static final Field<List<VariantEntity>> VARIANTS = multiset(
-                selectFrom(VARIANT)
-                        .where(VARIANT.PRODUCT_ID.eq(PRODUCT.ID)))
-                .as("variants")
-                .convertFrom(r -> r.into(VariantEntity.class));
+        private static final Field<List<CategoryEntity>> CATEGORIES = multiset(
+                select(PRODUCT.category().asterisk())
+                        .from(PRODUCT.category()))
+                        .as("categories")
+                        .convertFrom(r -> r.into(CategoryEntity.class));
     }
 }

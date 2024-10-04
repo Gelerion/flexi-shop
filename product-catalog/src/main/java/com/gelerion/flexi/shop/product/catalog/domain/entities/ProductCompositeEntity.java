@@ -6,12 +6,10 @@ import java.util.List;
 
 public record ProductCompositeEntity(
         ProductEntity product,
-        CategoryEntity category,
-        SubCategoryEntity subCategory,
         BrandEntity brand,
+        List<CategoryEntity> categories,
         List<SpecificationEntity> specifications,
         List<ImageEntity> images,
-        List<TagEntity> tags,
-        List<VariantEntity> variants
+        List<TagEntity> tags
 ) {
 }
