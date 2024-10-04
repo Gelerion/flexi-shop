@@ -2,6 +2,7 @@ package com.gelerion.flexi.shop.product.catalog.services;
 
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
 import com.gelerion.flexi.shop.product.catalog.infra.mappers.ProductMapper;
+import com.gelerion.flexi.shop.product.catalog.models.CompositeProductResource;
 import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.exception.NoDataFoundException;
@@ -21,7 +22,7 @@ public class ProductsService {
         this.productMapper = productMapper;
     }
 
-    public ProductResource getProduct(UUID productId) {
+    public CompositeProductResource getProduct(UUID productId) {
         return productRepository
                 .composite()
                 .findById(productId)

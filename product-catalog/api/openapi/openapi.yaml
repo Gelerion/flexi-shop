@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: FlexiShop Product Service API
   version: '1.0.0'
@@ -14,11 +14,14 @@ paths:
       summary: Retrieve a list of products
       operationId: listProducts
       parameters:
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/IncludeParam'
         - $ref: '#/components/parameters/SearchQueryParam'
-        - $ref: '#/components/parameters/PriceParam'
-        - $ref: '#/components/parameters/RatingParam'
+        - $ref: '#/components/parameters/FilterByProductNestedParam'
+        - $ref: '#/components/parameters/FilterByBrandParam'
+        - $ref: '#/components/parameters/FilterByPriceParam'
+        - $ref: '#/components/parameters/FilterByRatingParam'
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/SortByParam'
       responses:
         '200':
@@ -42,7 +45,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductResource'
+              $ref: '#/components/schemas/CreateProductResource'
       responses:
         '201':
           description: Product created successfully
@@ -61,20 +64,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /products/{productId}:
-    parameters:
-      - $ref: '#/components/parameters/ProductIdParam'
     get:
       tags:
         - Products
       summary: Retrieve a product by ID
       operationId: getProductById
+      parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
+        - $ref: '#/components/parameters/IncludeParam'
       responses:
         '200':
           description: Product details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResource'
+                $ref: '#/components/schemas/CompositeProductResource'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -84,6 +88,8 @@ paths:
         - Products
       summary: Partially update an existing product
       operationId: updateProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
       requestBody:
         description: Fields to update in the product
         required: true
@@ -109,6 +115,8 @@ paths:
         - Products
       summary: Delete a product
       operationId: deleteProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
       responses:
         '204':
           description: Product deleted successfully
@@ -116,6 +124,23 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /products/{productId}/tags/{tagId}:
+    put:
+      tags:
+        - Products
+      summary: Assign a tag to a product
+      operationId: addTag
+      parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the brand
+      responses:
+        '201':
+          description: Tag successfully added
   /brands:
     get:
       tags:
@@ -182,43 +207,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    put:
-      tags:
-        - Brands
-      summary: Update an existing brand
-      operationId: updateBrand
-      requestBody:
-        description: Updated brand
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BrandResource'
-      responses:
-        '200':
-          description: Brand updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrandResource'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      tags:
-        - Brands
-      summary: Delete a brand
-      operationId: deleteBrand
-      responses:
-        '204':
-          description: Brand deleted successfully
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   /categories:
     get:
       tags:
@@ -281,43 +269,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryResource'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      tags:
-        - Categories
-      summary: Update an existing category
-      operationId: updateCategory
-      requestBody:
-        description: Updated category
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryResource'
-      responses:
-        '200':
-          description: Category updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResource'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      tags:
-        - Categories
-      summary: Delete a category
-      operationId: deleteCategory
-      responses:
-        '204':
-          description: Category deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -456,6 +407,22 @@ components:
       schema:
         type: string
       description: The name of the tag
+    IncludeParam:
+      name: include
+      in: query
+      description: >
+        Comma-separated list of related resources to include. Possible values: `brands`, `tags`, `categories`
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - brands
+            - tags
+            - categories
+        style: form
+        explode: false
     LimitParam:
       name: limit
       in: query
@@ -479,7 +446,7 @@ components:
       schema:
         type: string
       description: Search query string
-    PriceParam:
+    FilterByPriceParam:
       name: price
       in: query
       style: deepObject
@@ -487,7 +454,7 @@ components:
       schema:
         $ref: '#/components/schemas/PriceCriteria'
       description: Price filter criteria
-    RatingParam:
+    FilterByRatingParam:
       name: rating
       in: query
       style: deepObject
@@ -495,6 +462,21 @@ components:
       schema:
         $ref: '#/components/schemas/RatingCriteria'
       description: Rating filter criteria
+    FilterByProductNestedParam:
+      name: product
+      in: query
+      style: deepObject
+      explode: true
+      schema:
+        $ref: '#/components/schemas/ProducNestedResourcesCriteria'
+      description: Filters for product sub-resources like category and tag
+    FilterByBrandParam:
+      name: brand
+      in: query
+      schema:
+        type: string
+        exmaples: ['Logitech']
+      description: Filters by brand
     SortByParam:
       name: sort_by
       in: query
@@ -503,7 +485,7 @@ components:
         items:
           type: string
           pattern: '^[a-zA-Z0-9_]+:(asc|desc)$'
-        example:
+        examples:
           - 'price:asc'
           - 'name:desc'
       explode: false
@@ -511,6 +493,14 @@ components:
         Sorting fields and order. Each value must be in the format `field:asc` or `field:desc`.
         Multiple fields can be specified by repeating the parameter.
   schemas:
+    CreateProductResource:
+      allOf:
+        - $ref: '#/components/schemas/ProductResource'
+        - $ref: '#/components/schemas/ProductResourceSubResources'
+    CompositeProductResource:
+      anyOf:
+        - $ref: '#/components/schemas/ProductResource'
+        - $ref: '#/components/schemas/ProductResourceSubResources'
     ProductResource:
       type: object
       required:
@@ -524,42 +514,67 @@ components:
           type: string
           format: uuid
           readOnly: true
-          example: '123e4567-e89b-12d3-a456-426614174000'
+          examples:
+            - '123e4567-e89b-12d3-a456-426614174000'
         name:
           type: string
           maxLength: 255
-          example: 'Wireless Mouse'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+          examples:
+            - 'Wireless Mouse'
         description:
           type: string
-          example: 'A high-quality wireless mouse with ergonomic design.'
+          x-field-extra-annotation: "@NotNull"
+          examples:
+            - 'A high-quality wireless mouse with ergonomic design.'
         brand:
           type: string
-          example: 'Logitech'
+          examples:
+            - 'Logitech'
         price:
           type: number
           format: float
           minimum: 0.0
-          example: 29.99
+          x-field-extra-annotation: "@NotNull"
+          examples:
+            - 29.99
         status:
           type: string
           enum: [active, inactive, discontinued]
           default: active
-          example: 'active'
+          examples:
+            - 'active'
         inventoryQuantity:
           type: integer
           minimum: 0
           default: 0
-          example: 150
+          examples:
+            - 150
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          examples:
+            - '2023-10-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          examples:
+            - '2023-10-02T12:00:00Z'
+    ProductResourceSubResources:
+      type: object
+      properties:
         categories:
           type: array
           items:
             type: string
-          example: ['Electronics', 'Accessories']
+          examples: ['Electronics', 'Accessories']
         tags:
           type: array
           items:
             type: string
-          example: ['wireless', 'mouse']
+          examples: ['wireless', 'mouse']
         images:
           type: array
           items:
@@ -568,70 +583,50 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SpecificationResource'
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-          example: '2023-10-01T12:00:00Z'
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-          example: '2023-10-02T12:00:00Z'
     ProductResourceUpdateRequest:
       type: object
       properties:
         name:
           type: string
           maxLength: 255
-          nullable: true
-          example: 'Wireless Mouse'
+          examples: ['Wireless Mouse']
         description:
           type: string
-          nullable: true
-          example: 'An updated description.'
+          examples: ['An updated description.']
         brand:
           type: string
-          nullable: true
-          example: 'Logitech'
+          examples: ['Logitech']
         price:
           type: number
           format: float
           minimum: 0.0
-          nullable: true
-          example: 29.99
+          examples: [29.99]
         status:
           type: string
           enum: [active, inactive, discontinued]
-          nullable: true
-          example: 'inactive'
+          examples: ['inactive']
         inventoryQuantity:
           type: integer
           minimum: 0
-          nullable: true
-          example: 120
+          examples: [120]
         categories:
           type: array
           items:
             type: string
-          nullable: true
-          example: ['Electronics', 'Accessories']
+          examples: ['Electronics', 'Accessories']
         tags:
           type: array
           items:
             type: string
-          nullable: true
-          example: ['wireless', 'mouse']
+          examples: ['wireless', 'mouse']
         images:
           type: array
           items:
             $ref: '#/components/schemas/ImageResource'
-          nullable: true
         specifications:
           type: array
           items:
             $ref: '#/components/schemas/SpecificationResource'
-          nullable: true
     ProductResourcePaginated:
       type: object
       required:
@@ -640,11 +635,21 @@ components:
       properties:
         totalItems:
           type: integer
-          example: 100
+          examples: [100]
         items:
           type: array
           items:
-            $ref: '#/components/schemas/ProductResource'
+            $ref: '#/components/schemas/CompositeProductResource'
+          examples:
+            - id: "123e4567-e89b-12d3-a456-426614174000"
+              name: "Wireless Mouse"
+              description: "A high-quality wireless mouse with ergonomic design."
+              brand: "Logitech"
+              price: 29.99
+              status: "active"
+              inventoryQuantity: 150
+              createdAt: "2023-10-01T12:00:00Z"
+              updatedAt: "2023-10-02T12:00:00Z"
     BrandResource:
       type: object
       required:
@@ -653,25 +658,24 @@ components:
         id:
           type: integer
           readOnly: true
-          example: 2
+          examples: [2]
         name:
           type: string
           maxLength: 255
-          example: 'Logitech'
+          examples: ['Logitech']
         description:
           type: string
-          nullable: true
-          example: 'A leading manufacturer of computer peripherals.'
+          examples: ['A leading manufacturer of computer peripherals.']
         createdAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-01T12:00:00Z'
+          examples: ['2023-10-01T12:00:00Z']
         updatedAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-02T12:00:00Z'
+          examples: ['2023-10-02T12:00:00Z']
     BrandResourcePaginated:
       type: object
       required:
@@ -680,7 +684,7 @@ components:
       properties:
         totalItems:
           type: integer
-          example: 20
+          examples: [20]
         items:
           type: array
           items:
@@ -693,25 +697,25 @@ components:
         id:
           type: integer
           readOnly: true
-          example: 3
+          examples: [3]
         name:
           type: string
           maxLength: 255
-          example: 'Electronics'
+          x-field-extra-annotation: "@NotNull\n@Size(min=1, max=255)"
+          examples: ['Electronics']
         parent:
           type: string
-          nullable: true
-          example: 'Technology'
+          examples: ['Technology']
         createdAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-01T12:00:00Z'
+          examples: ['2023-10-01T12:00:00Z']
         updatedAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-02T12:00:00Z'
+          examples: ['2023-10-02T12:00:00Z']
     CategoryResourcePaginated:
       type: object
       required:
@@ -720,7 +724,7 @@ components:
       properties:
         totalItems:
           type: integer
-          example: 15
+          examples: [15]
         items:
           type: array
           items:
@@ -733,21 +737,21 @@ components:
         id:
           type: integer
           readOnly: true
-          example: 4
+          examples: [4]
         name:
           type: string
           maxLength: 255
-          example: 'wireless'
+          examples: ['wireless']
         createdAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-01T12:00:00Z'
+          examples: ['2023-10-01T12:00:00Z']
         updatedAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-02T12:00:00Z'
+          examples: ['2023-10-02T12:00:00Z']
     TagResourcePaginated:
       type: object
       required:
@@ -756,7 +760,7 @@ components:
       properties:
         totalItems:
           type: integer
-          example: 50
+          examples: [50]
         items:
           type: array
           items:
@@ -770,25 +774,25 @@ components:
         id:
           type: integer
           readOnly: true
-          example: 10
+          examples: [10]
         imageUrl:
           type: string
           format: uri
-          example: 'https://cdn.flexishop.com/images/product1.jpg'
+          examples: ['https://cdn.flexishop.com/images/product1.jpg']
         isPrimary:
           type: boolean
           default: false
-          example: true
+          examples: [true]
         createdAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-01T12:00:00Z'
+          examples: ['2023-10-01T12:00:00Z']
         updatedAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-02T12:00:00Z'
+          examples: ['2023-10-02T12:00:00Z']
     SpecificationResource:
       type: object
       required:
@@ -798,25 +802,25 @@ components:
         id:
           type: integer
           readOnly: true
-          example: 5
+          examples: [5]
         name:
           type: string
           maxLength: 255
-          example: 'Battery Life'
+          examples: ['Battery Life']
         value:
           type: string
           maxLength: 255
-          example: 'Up to 12 months'
+          examples: ['Up to 12 months']
         createdAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-01T12:00:00Z'
+          examples: ['2023-10-01T12:00:00Z']
         updatedAt:
           type: string
           format: date-time
           readOnly: true
-          example: '2023-10-02T12:00:00Z'
+          examples: ['2023-10-02T12:00:00Z']
     PriceCriteria:
       type: object
       oneOf:
@@ -862,25 +866,43 @@ components:
           minimum: 0
           maximum: 5
       additionalProperties: false
+    ProducNestedResourcesCriteria:
+      type: object
+      properties:
+        category:
+          type: array
+          items:
+            type: string
+          examples:
+            - electronics
+            - accessories
+        tag:
+          type: array
+          items:
+            type: string
+          examples:
+            - keyboard
+            - ergonomic
+      additionalProperties: false
     ErrorResponse:
       type: object
       properties:
         timestamp:
           type: string
           format: date-time
-          example: '2023-10-03T15:23:01.456+00:00'
+          examples: ['2023-10-03T15:23:01.456+00:00']
         status:
           type: integer
-          example: 400
+          examples: [400]
         error:
           type: string
-          example: 'Bad Request'
+          examples: ['Bad Request']
         message:
           type: string
-          example: 'Validation failed for object=`productResource`. Error count: 1'
+          examples: ['Validation failed for object=`productResource`. Error count: 1']
         path:
           type: string
-          example: '/api/v1/products'
+          examples: ['/api/v1/products']
   responses:
     BadRequest:
       description: Bad Request

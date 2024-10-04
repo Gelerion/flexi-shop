@@ -21,7 +21,12 @@ public class ProductsController implements ProductsApi {
     }
 
     @Override
-    public ResponseEntity<ProductResource> createProduct(ProductResource productResource) {
+    public ResponseEntity<Void> addTag(UUID productId, String tagId) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<ProductResource> createProduct(CreateProductResource createProductResource) {
         return null;
     }
 
@@ -31,19 +36,54 @@ public class ProductsController implements ProductsApi {
     }
 
     @Override
-    public ResponseEntity<ProductResource> getProductById(UUID productId) {
+    public ResponseEntity<CompositeProductResource> getProductById(UUID productId, List<String> include) {
         var product = productsService.getProduct(productId);
         return ResponseEntity.ok(product);
     }
 
+
     @Override
-    public ResponseEntity<ProductResourceList> listProducts(Integer limit, Integer offset, String q, PriceCriteria price, RatingCriteria rating, List<String> sortBy) {
+    public ResponseEntity<ProductResourcePaginated> listProducts(List<String> include,
+                                                                 String q,
+                                                                 ProducNestedResourcesCriteria product,
+                                                                 String brand,
+                                                                 PriceCriteria price,
+                                                                 RatingCriteria rating,
+                                                                 Integer offset,
+                                                                 Integer limit,
+                                                                 List<String> sortBy) {
         return null;
     }
 
-
     @Override
-    public ResponseEntity<ProductResource> updateProduct(UUID productId, ProductResource productResource) {
+    public ResponseEntity<ProductResource> updateProduct(UUID productId, ProductResourceUpdateRequest productResourceUpdateRequest) {
         return null;
     }
+
+//    @Override
+//    public ResponseEntity<ProductResource> createProduct(ProductResource productResource) {
+//        return null;
+//    }
+//
+//    @Override
+//    public ResponseEntity<Void> deleteProduct(UUID productId) {
+//        return null;
+//    }
+//
+//    @Override
+//    public ResponseEntity<ProductResource> getProductById(UUID productId) {
+//        var product = productsService.getProduct(productId);
+//        return ResponseEntity.ok(product);
+//    }
+//
+//    @Override
+//    public ResponseEntity<ProductResourceList> listProducts(Integer limit, Integer offset, String q, PriceCriteria price, RatingCriteria rating, List<String> sortBy) {
+//        return null;
+//    }
+//
+//
+//    @Override
+//    public ResponseEntity<ProductResource> updateProduct(UUID productId, ProductResource productResource) {
+//        return null;
+//    }
 }
