@@ -3,6 +3,8 @@ spring:
       name: product-catalog
   jackson:
     default-property-inclusion: non_empty
+    deserialization:
+      fail-on-unknown-properties: false
 
 logging:
   level:

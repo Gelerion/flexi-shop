@@ -1,5 +1,5 @@
 import org.jooq.meta.jaxb.MatcherTransformType
-import java.util.Properties
+import java.util.*
 
 buildscript {
 	dependencies {
@@ -78,6 +78,9 @@ dependencies {
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.postgresql:postgresql")
 
+	//for pagination
+	implementation("org.springframework.data:spring-data-commons")
+
 	// Mapping
 	implementation("org.mapstruct:mapstruct:1.5.5.Final")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
@@ -130,13 +133,14 @@ openApiGenerate {
 		"interfaceOnly" to "true", // Do not generate implementations
 		"openApiNullable" to "false", // Do not annotate with custom nullable annotation
 		"skipDefaultInterface" to "true", // Do not generate stub implementations
-		"additionalModelTypeAnnotations" to "@lombok.Data @lombok.AllArgsConstructor", // Add Lombok annotations
+		"additionalModelTypeAnnotations" to "@lombok.Data\n\t@lombok.AllArgsConstructor\n\t@lombok.NoArgsConstructor", // Add Lombok annotations
 		"useTags" to "true", // Generate one interface per tag
 		"documentationProvider" to "none", // No documentation provider
 		"useSwaggerUI" to "false", // Do not use Swagger UI
 		"useSpringBoot3" to "true",
 		"sourceFolder" to "", // Do not add src/main/java package
-		"useJakartaEe" to "true"
+		"useJakartaEe" to "true",
+		"imports" to "true",
 	))
 	generateApiDocumentation.set(true)
 	generateModelDocumentation.set(true)

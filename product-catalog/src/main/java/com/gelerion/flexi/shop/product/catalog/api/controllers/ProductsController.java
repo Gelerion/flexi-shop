@@ -1,6 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.api.controllers;
 
-import com.gelerion.flexi.shop.product.catalog.api.includes.IncludeOption;
+import com.gelerion.flexi.shop.product.catalog.api.query.params.IncludeOption;
 import com.gelerion.flexi.shop.product.catalog.models.*;
 import com.gelerion.flexi.shop.product.catalog.rest.controllers.ProductsApi;
 import com.gelerion.flexi.shop.product.catalog.services.ProductsService;
@@ -46,19 +46,23 @@ public class ProductsController implements ProductsApi {
         return ResponseEntity.ok(product);
     }
 
-
     @Override
     public ResponseEntity<ProductResourcePaginated> listProducts(List<String> include,
-                                                                 String q,
-                                                                 ProducNestedResourcesCriteria product,
-                                                                 String brand,
-                                                                 PriceCriteria price,
-                                                                 RatingCriteria rating,
+                                                                 List<String> brand,
+                                                                 String price,
+                                                                 String rating,
+                                                                 List<String> productTag,
+                                                                 List<String> productCategory,
                                                                  Integer offset,
                                                                  Integer limit,
                                                                  List<String> sortBy) {
-        return null;
+//        Set<IncludeOption> includeCriteria = parseIncludes(include);
+//        ProductCriteria productCriteria = new ProductCriteria(product, brand, price, rating);
+//        PaginationCriteria paginationCriteria = new PaginationCriteria(offset, limit, sortBy);
+//        productsService.listProducts(productCriteria, includeCriteria, paginationCriteria);
+        return ResponseEntity.ok(new ProductResourcePaginated());
     }
+
 
     @Override
     public ResponseEntity<ProductResource> updateProduct(UUID productId,

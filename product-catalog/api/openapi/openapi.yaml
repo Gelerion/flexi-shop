@@ -11,15 +11,17 @@ paths:
     get:
       tags:
         - Products
-      summary: Retrieve a list of products
+      summary: Retrieve a list of products with optional filters
+      description: Fetch a paginated list of products with support for filtering by brand, category, price, rating, and tags. You can also sort the results
       operationId: listProducts
       parameters:
         - $ref: '#/components/parameters/IncludeParam'
-        - $ref: '#/components/parameters/SearchQueryParam'
-        - $ref: '#/components/parameters/FilterByProductNestedParam'
+        # - $ref: '#/components/parameters/SearchQueryParam'
         - $ref: '#/components/parameters/FilterByBrandParam'
         - $ref: '#/components/parameters/FilterByPriceParam'
         - $ref: '#/components/parameters/FilterByRatingParam'
+        - $ref: '#/components/parameters/FilterByProductTagParam'
+        - $ref: '#/components/parameters/FilterByProductCategoryParam'
         - $ref: '#/components/parameters/OffsetParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/SortByParam'
@@ -449,49 +451,76 @@ components:
     FilterByPriceParam:
       name: price
       in: query
-      style: deepObject
-      explode: true
       schema:
-        $ref: '#/components/schemas/PriceCriteria'
-      description: Price filter criteria
+        type: string
+        default: 'lte:1000'
+        examples:
+          - '10-20'
+          - 'gt:10'
+          - '10'
+      description: |
+        Specifies the price filter criteria. Supports:
+        - Range filters, e.g., `10-50`
+        - Comparison operators such as `lte:1000` (less than or equal to 1000) or `gte:50` 
+         (greater than or equal to 50).
+         Example: `gte:10` filters for prices greater than or equal to 10.
     FilterByRatingParam:
       name: rating
       in: query
-      style: deepObject
-      explode: true
       schema:
-        $ref: '#/components/schemas/RatingCriteria'
-      description: Rating filter criteria
-    FilterByProductNestedParam:
-      name: product
-      in: query
-      style: deepObject
-      explode: true
-      schema:
-        $ref: '#/components/schemas/ProducNestedResourcesCriteria'
-      description: Filters for product sub-resources like category and tag
+        type: string
+        default: 'gte:3'
+        examples:
+          - '0-5'
+          - 'gte:10'
+          - '3'
+      description: Specifies rating filter criteria. Supports both range filters (e.g., `0-5`) and comparison operators (`gte`, `lte`). For example, `gte:3` filters ratings greater than or equal to 3.
     FilterByBrandParam:
       name: brand
       in: query
+      explode: false
       schema:
-        type: string
-        exmaples: ['Logitech']
-      description: Filters by brand
+        type: array
+        items:
+          type: string
+          examples:
+            - 'Logitech'
+      description: Filters by brand(s)
+    FilterByProductTagParam:
+      name: product[tag]
+      in: query
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          examples:
+            - 'wireless'
+      description: Filters by tag(s)
+    FilterByProductCategoryParam:
+      name: product[category]
+      in: query
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          examples:
+            - 'Accessories'
+      description: Filters by tag(s)
     SortByParam:
       name: sort_by
       in: query
+      explode: false
       schema:
         type: array
         items:
           type: string
           pattern: '^[a-zA-Z0-9_]+:(asc|desc)$'
-        examples:
-          - 'price:asc'
-          - 'name:desc'
-      explode: false
-      description: >
-        Sorting fields and order. Each value must be in the format `field:asc` or `field:desc`.
-        Multiple fields can be specified by repeating the parameter.
+          examples:
+            - 'price:asc'
+            - 'name:desc'
+      description: Sorting fields and order. Each value must be in the format `field:asc` or `field:desc`
   schemas:
     CreateProductResource:
       allOf:
@@ -821,52 +850,7 @@ components:
           format: date-time
           readOnly: true
           examples: ['2023-10-02T12:00:00Z']
-    PriceCriteria:
-      type: object
-      oneOf:
-        - required: ['eq']
-        - required: ['gte']
-        - required: ['lte']
-        - required: ['gte', 'lte']
-      properties:
-        eq:
-          type: number
-          format: float
-          minimum: 0
-        gte:
-          type: number
-          format: float
-          minimum: 0
-        lte:
-          type: number
-          format: float
-          minimum: 0
-      additionalProperties: false
-    RatingCriteria:
-      type: object
-      oneOf:
-        - required: ['eq']
-        - required: ['gte']
-        - required: ['lte']
-        - required: ['gte', 'lte']
-      properties:
-        eq:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 5
-        gte:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 5
-        lte:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 5
-      additionalProperties: false
-    ProducNestedResourcesCriteria:
+    ProductNestedResourcesCriteria:
       type: object
       properties:
         category:

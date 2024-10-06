@@ -1,4 +1,4 @@
-package com.gelerion.flexi.shop.product.catalog.api.includes;
+package com.gelerion.flexi.shop.product.catalog.api.query.params;
 
 public enum IncludeOption {
     CATEGORIES,
