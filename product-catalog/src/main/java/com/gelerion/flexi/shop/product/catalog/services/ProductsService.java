@@ -48,7 +48,7 @@ public class ProductsService {
 
         PageRequest pageable = PageRequest.of(pagination.offset(), pagination.limit());
 
-        Condition condition = DSL.trueCondition();
+        Condition condition = DSL.noCondition();
         if (criteria.brand() != null) {
             condition = condition.and(BRAND.NAME.eq(criteria.brand()));
         }

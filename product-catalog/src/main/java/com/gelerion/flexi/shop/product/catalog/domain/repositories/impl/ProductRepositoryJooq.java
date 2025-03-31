@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.toBrandEntity;
@@ -60,6 +61,11 @@ public class ProductRepositoryJooq implements ProductRepository {
     public Page<ProductEntity> findAll(Condition condition, Pageable pageable) {
         log.info("Executing query with condition: {}", condition);
 
+        Field<BigDecimal> field = field(PRODUCT.PRICE);
+//        Condition condition1 = toCondition(field);
+//        LessThan<? extends Number> numberLessThan = new LessThan<>();
+//        numberLessThan.toCondition(field, BigDecimal.valueOf(4));
+
         // fetch total count for pagination metadata
         long total = dsl.selectCount()
                 .from(PRODUCT)
@@ -74,6 +80,7 @@ public class ProductRepositoryJooq implements ProductRepository {
             return Page.empty(pageable);
         }
 
+        //Use seek instead of limit/offet -- https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/seek-clause/
         List<ProductEntity> products = dsl.select(PRODUCT.asterisk())
                 .from(PRODUCT)
                 .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
@@ -83,10 +90,20 @@ public class ProductRepositoryJooq implements ProductRepository {
                 .offset(pageable.getOffset())
                 .fetchInto(ProductEntity.class);
 
+        LessThan priceLessThan = new LessThan();
+        Condition condition1 = priceLessThan.toCondition(PRODUCT.PRICE, BigDecimal.valueOf(10));
+
         log.info("Returning {} products for page {} of size {}",
                 products.size(), pageable.getPageNumber(), pageable.getPageSize());
         return new PageImpl<>(products, pageable, total);
     }
+
+    public record LessThan() {
+        public <T extends Number> Condition toCondition(Field<T> field, T value) {
+            return field.lessThan(value);
+        }
+    }
+
 
     private List<SortField<?>> convertSortToOrderBy(Sort sort) {
         List<SortField<?>> orderByFields = new ArrayList<>();

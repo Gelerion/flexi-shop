@@ -56,6 +56,11 @@ public class ProductsController implements ProductsApi {
                                                                  Integer offset,
                                                                  Integer limit,
                                                                  List<String> sortBy) {
+        /*
+        Range filters, e.g., 10-50
+        Comparison operators such as lte:1000 (less than or equal to 1000) or gte:50 (greater than or equal to 50).
+        Example: gte:10 filters for prices greater than or equal to 10.
+         */
 //        Set<IncludeOption> includeCriteria = parseIncludes(include);
 //        ProductCriteria productCriteria = new ProductCriteria(product, brand, price, rating);
 //        PaginationCriteria paginationCriteria = new PaginationCriteria(offset, limit, sortBy);

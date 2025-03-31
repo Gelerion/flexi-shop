@@ -1,10 +1,79 @@
 # FlexiShop 
 FlexiShop, a fictional e-commerce platform, several services can be designed to handle various functionalities 
 of the system. Below is a detailed breakdown of the potential services that could be implemented, along with their
-responsibilities:
+responsibilities
 
-### Startup report
-http://localhost:8080/startup-report
+### Installation Guide
+
+#### Prerequisites
+
+- Java 21 (we recommend using SDKMAN to manage Java versions)
+- Docker and Docker Compose
+- Gradle
+
+#### Installation Options
+
+##### Option 1: Manual Setup
+
+If you prefer to run each step manually or need more control over the process:
+
+1. **Set up Java 21**
+   ```bash
+   # If using SDKMAN
+   sdk use java 21.0.3-zulu
+   
+   # Verify Java version
+   java -version  # Should show Java 21
+   ```
+
+2. **Start Database**
+   ```bash
+   # Start PostgreSQL container
+   docker compose -f docker-compose.yml up -d
+   ```
+
+3. **Run Database Migrations**
+   ```bash
+   # Create tables and apply initial data
+   ./gradlew runAllFlywayMigrate
+   ```
+
+4. **Generate API Documentation**
+   ```bash
+   # Generate OpenAPI specifications
+   ./gradlew runAllOpenApiGenerate
+   ```
+
+5. **Generate Database Code**
+   ```bash
+   # Generate JOOQ classes from database schema
+   ./gradlew runAllJooqCodegen
+   ```
+
+##### Option 2: Automated Setup Script
+
+For a quick start, you can use the provided setup script:
+
+```bash
+# Make the script executable
+chmod +x install.sh
+
+# Run the complete setup
+./install.sh
+```
+
+This script will automatically:
+
+- Start Docker services
+- Run database migrations
+- Generate API documentation
+- Generate database code
+
+##### Option 3: Makefile (SDKMAN Users)
+
+```bash
+make init
+```
 
 ## Support Advanced Filtering
 Clients allowed to filter results using various operators such as equal (`eq`), less than or equal (`lte`), greater 
