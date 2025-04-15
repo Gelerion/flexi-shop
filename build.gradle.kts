@@ -1,4 +1,3 @@
-// In your root build.gradle.kts
 
 val runAllFlywayMigrateProvider = tasks.register("runAllFlywayMigrate") {
     group = "database"

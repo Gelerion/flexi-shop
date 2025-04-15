@@ -66,7 +66,19 @@ public class ProductRepositoryJooq implements ProductRepository {
 //        LessThan<? extends Number> numberLessThan = new LessThan<>();
 //        numberLessThan.toCondition(field, BigDecimal.valueOf(4));
 
+        /*
+         //JOIN with a product_tag mapping table and the tag table
+           condition = condition.and(DSL.exists(
+         //      DSL.selectOne()
+         //         .from(Tables.PRODUCT_TAG)
+         //         .join(Tables.TAG).on(Tables.PRODUCT_TAG.TAG_ID.eq(Tables.TAG.ID)) // Or TAG.SLUG/NAME
+         //         .where(Tables.PRODUCT_TAG.PRODUCT_ID.eq(PRODUCT.ID))
+         //         .and(Tables.TAG.ID.in(tagIds)) // Or TAG.SLUG/NAME
+         // ));
+         */
+
         // fetch total count for pagination metadata
+        //productRepository.countByCriteria(queryParams);
         long total = dsl.selectCount()
                 .from(PRODUCT)
                 .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
@@ -92,6 +104,7 @@ public class ProductRepositoryJooq implements ProductRepository {
 
         LessThan priceLessThan = new LessThan();
         Condition condition1 = priceLessThan.toCondition(PRODUCT.PRICE, BigDecimal.valueOf(10));
+        //PRODUCT.PRICE.getName()
 
         log.info("Returning {} products for page {} of size {}",
                 products.size(), pageable.getPageNumber(), pageable.getPageSize());
