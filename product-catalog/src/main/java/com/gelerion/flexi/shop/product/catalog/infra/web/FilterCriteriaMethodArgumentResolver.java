@@ -11,6 +11,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -23,12 +24,32 @@ annotations like @RequestParam or @RequestBody, developers can create custom res
 types or non-standard request data binding scenario
 
 E.g. built-in for pagination: PageableHandlerMethodArgumentResolver
+
+Objective:
+Details the design and implementation strategy for a robust, dynamic REST API filtering module.
+The module is designed to support Projection, Selection, and Range filtering criteria, enabling flexible data retrieval
+for API consumers.
+
+Importance:
+Implementing dynamic filtering offers substantial benefits for REST APIs. Projection filtering allows clients to
+request only the data fields they need, reducing payload size, minimizing network latency, and conserving bandwidth.
+Selection and range filtering provide powerful mechanisms for clients to query and explore data based on specific
+criteria, reducing the need for numerous specialized API endpoints or complex client-side data manipulation.
+This enhances the overall usability, efficiency, and flexibility of the API for diverse consumer needs.
+
+Defining Filtering Mechanisms and API Contract
+- Projection Filtering
+- Selection Filtering
+- Range Filtering
+
  */
 public class FilterCriteriaMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
     private static final String FIELDS_PARAM = "fields";
     private static final String INCLUDE_PARAM = "include";
     private static final Set<String> SKIP_FILTER_PARAMS = Set.of("page", "size", "sort", FIELDS_PARAM, INCLUDE_PARAM);
+    private static final String COMMA = ",";
+
 
     private final FilterParser filterParser;
 
@@ -42,33 +63,28 @@ public class FilterCriteriaMethodArgumentResolver implements HandlerMethodArgume
     }
 
     @Override
-    //TODO: nested fields / bracket notation
     public Object resolveArgument(MethodParameter parameter,
                                   ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest,
                                   WebDataBinderFactory binderFactory) throws Exception {
         FilterCriteria criteria = FilterCriteria.empty();
         getParameterStream(webRequest)
-                .forEach(param -> processParameter(param, webRequest, criteria));
+                .forEach(param -> processParameter(param, criteria));
 
         return criteria;
     }
 
-    private void processParameter(ParamEntry param, NativeWebRequest webRequest, FilterCriteria criteria) {
+    private void processParameter(ParamEntry param, FilterCriteria criteria) {
         switch (param.name()) {
-            case FIELDS_PARAM -> {
-                // Uncomment when fields handling is implemented
-                //criteria.setFields(parseCommaSeparated(paramMap.get(FIELDS_PARAM)));
-            }
-            case INCLUDE_PARAM -> {
-                // Uncomment when include handling is implemented
-                // criteria.setIncludes(parseCommaSeparated(param.values()));
-            }
+            case FIELDS_PARAM -> processValues(param, criteria::addProjectionField);
+
+            case INCLUDE_PARAM -> processValues(param, criteria::addIncludesField);
+
             case String name when !SKIP_FILTER_PARAMS.contains(name) -> {
                 log.atDebug().log("Processing filter parameter '{}' with values: {}", name,
                         Arrays.toString(param.values()));
                 Arrays.stream(param.values())
-                        .map(filterParser::parse)
+                        .flatMap(filterParser::parse)
                         .forEach(filterExpression -> criteria.filters().add(name, filterExpression));
             }
 
@@ -92,4 +108,17 @@ public class FilterCriteriaMethodArgumentResolver implements HandlerMethodArgume
             return "%s=%s".formatted(name, Arrays.toString(values));
         }
     }
+
+    private void processValues(ParamEntry param, Consumer<String> action) {
+        log.atDebug().log("Processing parameter '{}' with values: {}", param.name(),
+                Arrays.toString(param.values()));
+        Arrays.stream(param.values())
+                .flatMap(this::split)
+                .forEach(action);
+    }
+
+    private Stream<String> split(String value) {
+        return Arrays.stream(value.split(COMMA));
+    }
+
 }

@@ -28,7 +28,6 @@ If you prefer to run each step manually or need more control over the process:
 
 2. **Start Database**
    ```bash
-   # Start PostgreSQL container
    docker compose -f docker-compose.yml up -d
    ```
 
@@ -40,7 +39,6 @@ If you prefer to run each step manually or need more control over the process:
 
 4. **Generate API Documentation**
    ```bash
-   # Generate OpenAPI specifications
    ./gradlew runAllOpenApiGenerate
    ```
 
@@ -55,10 +53,7 @@ If you prefer to run each step manually or need more control over the process:
 For a quick start, you can use the provided setup script:
 
 ```bash
-# Make the script executable
 chmod +x install.sh
-
-# Run the complete setup
 ./install.sh
 ```
 

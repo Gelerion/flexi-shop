@@ -19,6 +19,5 @@ public class ProductCatalogWebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(filterCriteriaResolver);
-        // Add other custom resolvers if needed
     }
 }

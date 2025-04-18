@@ -1,6 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories;
 
-import com.gelerion.flexi.shop.product.catalog.api.query.params.IncludeOption;
+import com.gelerion.flexi.shop.product.catalog.api.query.params.ProductIncludeOption;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.ProductEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
@@ -23,7 +23,7 @@ public interface ProductRepository {
     CompositeProductRepository composite();
 
     interface CompositeProductRepository {
-        Optional<ProductCompositeEntity> findById(UUID productId, Set<IncludeOption> includes);
+        Optional<ProductCompositeEntity> findById(UUID productId, Set<ProductIncludeOption> includes);
 
         Optional<ProductCompositeEntity> findById(UUID productId);
     }

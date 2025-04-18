@@ -41,9 +41,6 @@ switch-java:
 	else \
 		echo "Java version $(TARGET_JAVA_VERSION) is already active."; \
 	fi
-	# Export JAVA_HOME for subsequent commands in the SAME recipe if needed elsewhere,
-	# but for Gradle called via $(MAKE), it's better to run it in its own context after switch.
-	# export JAVA_HOME=$$(sdk home java $(SDKMAN_JAVA_IDENTIFIER))
 
 # Target to check if Docker services are running and start if not
 check-docker-running: docker-up

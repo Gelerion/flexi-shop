@@ -1,10 +1,10 @@
-openapi: 3.1.0
+openapi: 3.1.1
 info:
   title: FlexiShop Product Service API
   version: '1.0.0'
   description: API specification for FlexiShop's Product Service, incorporating best practices for pagination, error handling, and resource modeling. Uses individual query parameters for filtering to ensure specific URL format.
 servers:
-  - url: https://api.flexishop.com/v1
+  - url: http://localhost:8080/
     description: Production server
 paths:
   /products:
@@ -87,8 +87,11 @@ paths:
       description: Fetch a single product by its UUID, with optional inclusion of related resources and field projection.
       operationId: getProductById
       parameters:
+        - $ref: '#/components/parameters/ProductIdParam'
         - $ref: '#/components/parameters/IncludeParam'
         - $ref: '#/components/parameters/FieldsParam'
+      x-spring-provide-args:
+        - 'com.gelerion.flexi.shop.product.catalog.infra.web.domain.FilterCriteria filterCriteria'
       responses:
         '200':
           description: Product details. The included related resources depend on the 'include' parameter.
@@ -766,9 +769,8 @@ components:
           maxLength: 255
           example: 'Electronics'
           x-field-extra-annotation: "@jakarta.validation.constraints.NotNull\n@jakarta.validation.constraints.Size(min=1, max=255)"
-        parentCategoryId:
+        parentId:
           type: integer
-          # Removed nullable: true
           example: 1
         createdAt:
           type: string
@@ -819,7 +821,6 @@ components:
           example: 'https://cdn.flexishop.com/images/product1.jpg'
         altText:
           type: string
-          # Removed nullable: true
           example: 'Side view of the wireless mouse'
         isPrimary:
           type: boolean

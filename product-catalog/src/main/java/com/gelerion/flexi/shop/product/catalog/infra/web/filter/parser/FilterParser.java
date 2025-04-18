@@ -1,20 +1,17 @@
 package com.gelerion.flexi.shop.product.catalog.infra.web.filter.parser;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 public interface FilterParser {
 
-    FilterExpression parse(String expression);
+    Stream<FieldFilter> parse(String expression);
 
-    sealed interface FilterExpression permits ListFilter, LiteralFilter, RangeFilter {
+    sealed interface FieldFilter permits LiteralFieldFilter, RangeFieldFilter {
     }
 
-    record LiteralFilter(Object value) implements FilterExpression {
+    record LiteralFieldFilter(Object value) implements FieldFilter {
     }
 
-    record ListFilter(List<LiteralFilter> values) implements FilterExpression {
-    }
-
-    record RangeFilter(RangeOperator op, Object value) implements FilterExpression {
+    record RangeFieldFilter(RangeOperator op, Object value) implements FieldFilter {
     }
 }

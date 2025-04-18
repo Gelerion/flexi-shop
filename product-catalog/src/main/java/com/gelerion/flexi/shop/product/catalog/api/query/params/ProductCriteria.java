@@ -1,9 +1,9 @@
 package com.gelerion.flexi.shop.product.catalog.api.query.params;
 
-import com.gelerion.flexi.shop.product.catalog.models.ProductNestedResourcesCriteria;
+import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
 
 public record ProductCriteria(
-        ProductNestedResourcesCriteria product,
+        ProductResource product,
         String brand)
 //        PriceCriteria price,
 //        RatingCriteria rating)

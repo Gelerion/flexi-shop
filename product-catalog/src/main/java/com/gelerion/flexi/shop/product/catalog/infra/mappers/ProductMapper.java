@@ -1,10 +1,10 @@
 package com.gelerion.flexi.shop.product.catalog.infra.mappers;
 
-import com.gelerion.flexi.shop.product.catalog.domain.entities.enums.ProductStatus;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
-import com.gelerion.flexi.shop.product.catalog.models.CompositeProductResource;
+import com.gelerion.flexi.shop.product.catalog.domain.entities.enums.ProductStatus;
 import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
 
 @Mapper(
@@ -17,13 +17,10 @@ import org.mapstruct.MappingConstants.ComponentModel;
 public interface ProductMapper {
 
     @Mapping(source = "product", target = ".")
-    @Mapping(source = "brand.name", target = "brand")
-    @Mapping(source = "tags", target = "tags")
-    @Mapping(source = "categories", target = "categories")
-    CompositeProductResource toResource(ProductCompositeEntity entity);
+    ProductResource toResource(ProductCompositeEntity entity);
 
-    default CompositeProductResource.StatusEnum mapStatus(ProductStatus status) {
-        return CompositeProductResource.StatusEnum.fromValue(status.toString());
+    default ProductResource.StatusEnum mapStatus(ProductStatus status) {
+        return ProductResource.StatusEnum.fromValue(status.toString());
     }
 
 }

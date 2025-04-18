@@ -1,6 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 
-import com.gelerion.flexi.shop.product.catalog.api.query.params.IncludeOption;
+import com.gelerion.flexi.shop.product.catalog.api.query.params.ProductIncludeOption;
 import com.gelerion.flexi.shop.product.catalog.common.JooqHelpers;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
@@ -62,6 +62,7 @@ public class ProductRepositoryJooq implements ProductRepository {
         log.info("Executing query with condition: {}", condition);
 
         Field<BigDecimal> field = field(PRODUCT.PRICE);
+
 //        Condition condition1 = toCondition(field);
 //        LessThan<? extends Number> numberLessThan = new LessThan<>();
 //        numberLessThan.toCondition(field, BigDecimal.valueOf(4));
@@ -144,18 +145,42 @@ public class ProductRepositoryJooq implements ProductRepository {
             this.dsl = dsl;
         }
 
+        //multisets for Dynamic Data Inclusion
+        /*
+        Strategy 1: Dynamic JOINs based on includes
+        A traditional approach is to parse the includes parameter and, for each requested relation (e.g., "tags"),
+        dynamically add the necessary JOIN clauses to the query, similar to how joins are added for filtering.
+        The SELECT clause must also be modified to include columns from these joined tables.
+
+        However, this strategy has significant drawbacks:
+            - Flattened Results: Standard SQL joins produce flat, tabular results. If a product has multiple tags,
+              joining PRODUCTS with TAGS (via PRODUCT_TAGS) will result in multiple rows for the same product,
+              duplicating the product's data.
+            - Mapping Complexity: Reconstructing nested DTOs (e.g., a ProductDTO containing a List<TagDTO>) from
+              this flattened result set requires complex and often inefficient mapping logic in the application layer.
+              While jOOQ offers mapping capabilities, including mapping flattened results using dot-notation
+              aliases (TAGS.NAME.as("tags.name")), this can be verbose and doesn't fundamentally solve the data
+              duplication issue at the SQL level.
+
+        Strategy 2: Leveraging the MULTISET Operator
+        A more modern and often superior approach, available since jOOQ 3.14 and leveraging standard SQL
+        features (often emulated by jOOQ using SQL/JSON or SQL/XML), is the MULTISET operator.
+        MULTISET allows fetching nested collections directly within a single SQL query. For each row in the
+        main query (e.g., each product), a correlated subquery is executed to fetch the related items (e.g., tags),
+        and the results are aggregated into a nested collection within that main row.
+         */
         @Override
-        public Optional<ProductCompositeEntity> findById(UUID productId, Set<IncludeOption> includes) {
+        public Optional<ProductCompositeEntity> findById(UUID productId, Set<ProductIncludeOption> includes) {
             return dsl.select(
                             PRODUCT.convertFrom(toProductEntity),
                             PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
-                            includes.contains(IncludeOption.CATEGORIES) ?
+                            includes.contains(ProductIncludeOption.CATEGORIES) ?
                                     multisets.CATEGORIES : JooqHelpers.multisets.empty(CategoryEntity.class),
-                            includes.contains(IncludeOption.SPECIFICATIONS) ?
+                            includes.contains(ProductIncludeOption.SPECIFICATIONS) ?
                                     multisets.SPECIFICATIONS : JooqHelpers.multisets.empty(SpecificationEntity.class),
-                            includes.contains(IncludeOption.IMAGES) ?
+                            includes.contains(ProductIncludeOption.IMAGES) ?
                                     multisets.IMAGES : JooqHelpers.multisets.empty(ImageEntity.class),
-                            includes.contains(IncludeOption.TAGS) ?
+                            includes.contains(ProductIncludeOption.TAGS) ?
                                     multisets.TAGS : JooqHelpers.multisets.empty(TagEntity.class)
                     )
                     .from(PRODUCT)
