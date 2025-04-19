@@ -1,7 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.infra.web.filter.parser;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -13,11 +12,6 @@ import java.util.stream.Stream;
 public class FilterParserImpl implements FilterParser {
     private static final String COLON = ":";
     private static final String COMMA = ",";
-
-    @NotNull
-    private static ListFilter createListFilter(String[] values) {
-        return new ListFilter(Arrays.stream(values).map(LiteralFieldFilter::new).toList());
-    }
 
     private static Optional<String> validateExpression(String expression) {
         if (expression == null || expression.isBlank()) {

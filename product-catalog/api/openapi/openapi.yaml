@@ -19,7 +19,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ProductFilterParam'
         - $ref: '#/components/parameters/IncludeParam'
-        - $ref: '#/components/parameters/FieldsParam'
         - $ref: '#/components/parameters/PageableParam'
       responses:
         '200':
@@ -77,7 +76,6 @@ paths:
       operationId: getProductById
       parameters:
         - $ref: '#/components/parameters/IncludeParam'
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: Product details. The included related resources depend on the 'include' parameter.
@@ -215,7 +213,6 @@ paths:
       operationId: listBrands
       parameters:
         - $ref: '#/components/parameters/PageableParam'
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: A paginated list of brands.
@@ -265,8 +262,6 @@ paths:
         - Brands
       summary: Retrieve a brand by ID
       operationId: getBrandById
-      parameters:
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: Brand details.
@@ -287,7 +282,6 @@ paths:
       operationId: listCategories
       parameters:
         - $ref: '#/components/parameters/PageableParam'
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: A paginated list of categories.
@@ -337,8 +331,6 @@ paths:
         - Categories
       summary: Retrieve a category by ID
       operationId: getCategoryById
-      parameters:
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: Category details.
@@ -359,7 +351,6 @@ paths:
       operationId: listTags
       parameters:
         - $ref: '#/components/parameters/PageableParam'
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: A paginated list of tags.
@@ -409,8 +400,6 @@ paths:
         - Tags
       summary: Retrieve a tag by ID
       operationId: getTagById
-      parameters:
-        - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
           description: Tag details.
@@ -537,21 +526,6 @@ components:
       style: form
       explode: false
       example: "brand,tags"
-
-    FieldsParam:
-      name: fields
-      in: query
-      description: >
-        Comma-separated list of top-level fields to include in the response resource(s).
-        Example: `fields=id,name,price`
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-        example: [ id, name, price ]
-      style: form
-      explode: false
 
   schemas:
     Pageable:
@@ -1163,7 +1137,7 @@ components:
         sort:
           type: array
           items:
-            $ref: '#/components/schemas/SortInfo'
+            $ref: '#/components/schemas/SortOrderInfo'
           readOnly: true
           example:
             - property: 'name'
@@ -1191,7 +1165,7 @@ components:
             ignoreCase: false
             nullHandling: 'native'
 
-    SortInfo:
+    SortOrderInfo:
       type: object
       description: Details of a single sort criterion applied to the query, mirroring Spring Data Sort structure.
       properties:

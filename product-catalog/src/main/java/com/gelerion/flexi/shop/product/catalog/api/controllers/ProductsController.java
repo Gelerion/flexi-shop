@@ -1,13 +1,11 @@
 package com.gelerion.flexi.shop.product.catalog.api.controllers;
 
-import com.gelerion.flexi.shop.product.catalog.infra.web.domain.FilterCriteria;
-import com.gelerion.flexi.shop.product.catalog.models.ProductCreateRequest;
-import com.gelerion.flexi.shop.product.catalog.models.ProductPage;
-import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
-import com.gelerion.flexi.shop.product.catalog.models.ProductUpdateRequest;
+import com.gelerion.flexi.shop.product.catalog.infra.mappers.PageableMapper;
+import com.gelerion.flexi.shop.product.catalog.models.*;
 import com.gelerion.flexi.shop.product.catalog.rest.controllers.ProductsApi;
 import com.gelerion.flexi.shop.product.catalog.services.ProductsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,9 +17,12 @@ import java.util.UUID;
 @RestController
 public class ProductsController implements ProductsApi {
     private final ProductsService productsService;
+    private final PageableMapper mapper;
 
-    public ProductsController(ProductsService productsService) {
+    public ProductsController(ProductsService productsService,
+                              PageableMapper mapper) {
         this.productsService = productsService;
+        this.mapper = mapper;
     }
 
     @Override
@@ -44,34 +45,21 @@ public class ProductsController implements ProductsApi {
         return null;
     }
 
+
     @Override
     public ResponseEntity<ProductResource> getProductById(UUID productId,
-                                                          List<String> include,
-                                                          List<String> fields,
-                                                          FilterCriteria filterCriteria) {
-        var product = productsService.getProduct(productId, filterCriteria);
+                                                          List<ProductIncludeOption> include) {
+        ProductResource product = productsService.getProduct(productId, include);
         return ResponseEntity.ok(product);
     }
 
     @Override
-    public ResponseEntity<ProductPage> listProducts(Integer page,
-                                                    Integer size,
-                                                    List<String> sort,
-                                                    String q,
-                                                    List<String> brand,
-                                                    List<String> price,
-                                                    List<String> rating,
-                                                    List<String> productCategory,
-                                                    List<String> productTag,
-                                                    List<String> include,
-                                                    List<String> fields,
-                                                    FilterCriteria filterCriteria,
+    public ResponseEntity<ProductPage> listProducts(ProductFilterCriteria filter,
+                                                    List<ProductIncludeOption> include,
                                                     Pageable pageable) {
-        System.out.println("pageable = " + pageable);
-        System.out.println("filterCriteria = " + filterCriteria);
-        return null;
+        Page<ProductResource> response = productsService.listProducts(pageable);
+        return ResponseEntity.ok(mapper.toProductPage(response));
     }
-
 
     @Override
     public ResponseEntity<ProductResource> updateProduct(UUID productId, ProductUpdateRequest productUpdateRequest) {

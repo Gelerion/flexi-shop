@@ -1,11 +1,11 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 
-import com.gelerion.flexi.shop.product.catalog.api.query.params.ProductIncludeOption;
 import com.gelerion.flexi.shop.product.catalog.common.JooqHelpers;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
+import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -18,7 +18,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.toBrandEntity;
 import static com.gelerion.flexi.shop.product.catalog.domain.converter.impl.JooqRecordConverters.toProductEntity;
@@ -55,6 +58,35 @@ public class ProductRepositoryJooq implements ProductRepository {
         return dsl.selectFrom(PRODUCT)
                 .where(PRODUCT.ID.eq(productId))
                 .fetchOptional();
+    }
+
+    @Override
+    public Page<ProductEntity> findAll(Pageable pageable) {
+        // fetch total count for pagination metadata
+        long total = dsl.selectCount()
+                .from(PRODUCT)
+                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
+                .fetchOptional(0, long.class)
+                .orElse(0L);
+
+        log.info("Total records found: {}", total);
+        if (total == ZERO_RECORDS) {
+            log.info("No records found, returning empty Page.");
+            return Page.empty(pageable);
+        }
+
+        //Use seek instead of limit/offet -- https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/seek-clause/
+        List<ProductEntity> products = dsl.select(PRODUCT.asterisk())
+                .from(PRODUCT)
+                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
+                .orderBy(convertSortToOrderBy(pageable.getSort()))
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(ProductEntity.class);
+
+        log.info("Returning {} products for page {} of size {}",
+                products.size(), pageable.getPageNumber(), pageable.getPageSize());
+        return new PageImpl<>(products, pageable, total);
     }
 
     @Override
@@ -145,7 +177,7 @@ public class ProductRepositoryJooq implements ProductRepository {
             this.dsl = dsl;
         }
 
-        //multisets for Dynamic Data Inclusion
+        //Why multisets for Dynamic Data Inclusion?
         /*
         Strategy 1: Dynamic JOINs based on includes
         A traditional approach is to parse the includes parameter and, for each requested relation (e.g., "tags"),
@@ -170,7 +202,7 @@ public class ProductRepositoryJooq implements ProductRepository {
         and the results are aggregated into a nested collection within that main row.
          */
         @Override
-        public Optional<ProductCompositeEntity> findById(UUID productId, Set<ProductIncludeOption> includes) {
+        public Optional<ProductCompositeEntity> findById(UUID productId, List<ProductIncludeOption> includes) {
             return dsl.select(
                             PRODUCT.convertFrom(toProductEntity),
                             PRODUCT.brand().as("brand").convertFrom(toBrandEntity),

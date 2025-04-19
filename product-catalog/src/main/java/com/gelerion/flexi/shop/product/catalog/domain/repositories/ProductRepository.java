@@ -1,15 +1,15 @@
 package com.gelerion.flexi.shop.product.catalog.domain.repositories;
 
-import com.gelerion.flexi.shop.product.catalog.api.query.params.ProductIncludeOption;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.ProductEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
+import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
 import org.jooq.Condition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 public interface ProductRepository {
@@ -20,10 +20,12 @@ public interface ProductRepository {
 
     Page<ProductEntity> findAll(Condition condition, Pageable pageable);
 
+    Page<ProductEntity> findAll(Pageable pageable);
+
     CompositeProductRepository composite();
 
     interface CompositeProductRepository {
-        Optional<ProductCompositeEntity> findById(UUID productId, Set<ProductIncludeOption> includes);
+        Optional<ProductCompositeEntity> findById(UUID productId, List<ProductIncludeOption> includes);
 
         Optional<ProductCompositeEntity> findById(UUID productId);
     }

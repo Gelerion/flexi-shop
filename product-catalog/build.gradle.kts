@@ -12,7 +12,7 @@ plugins {
 	id("org.springframework.boot") version "3.3.1"
 	id("io.spring.dependency-management") version "1.1.5"
 //	id("org.springframework.cloud.contract") version "4.1.3"
-	id("org.openapi.generator") version "7.7.0"
+	id("org.openapi.generator") version "7.12.0"
 	id("idea")
 	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
 	id("org.flywaydb.flyway") version "10.10.0"
@@ -142,6 +142,19 @@ openApiGenerate {
 		"useJakartaEe" to "true",
 		"imports" to "true",
 	))
+	additionalProperties.put("useSpringPageable", "true")
+	importMappings.set(
+		mapOf(
+			"Pageable" to "org.springframework.data.domain.Pageable",
+			"SortOrderInfo" to "org.springframework.data.domain.Sort.Order",
+		)
+	)
+	typeMappings.set(
+		mapOf(
+			"Pageable" to "org.springframework.data.domain.Pageable",
+			"SortOrderInfo" to "org.springframework.data.domain.Sort.Order",
+		)
+	)
 	generateApiDocumentation.set(true)
 	generateModelDocumentation.set(true)
 }
