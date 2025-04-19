@@ -4,8 +4,10 @@ info:
   version: '1.0.0'
   description: API specification for FlexiShop's Product Service, incorporating best practices for pagination, error handling, and resource modeling. Uses individual query parameters for filtering to ensure specific URL format.
 servers:
-  - url: http://localhost:8080/
+  - url: https://api.flexishop.com/v1
     description: Production server
+  - url: http://localhost:8080/v1
+    description: Development server
 paths:
   /products:
     get:
@@ -15,23 +17,10 @@ paths:
       description: Fetch a paginated list of products with support for filtering, sorting, projection, and inclusion of related resources using individual query parameters.
       operationId: listProducts
       parameters:
-        # Pagination & Sorting
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-        - $ref: '#/components/parameters/SortParam'
-        # Filtering (Individual Parameters)
-        - $ref: '#/components/parameters/SearchQueryParam' # q=...
-        - $ref: '#/components/parameters/FilterByBrandParam' # brand=BrandName&brand=AnotherBrand
-        - $ref: '#/components/parameters/FilterByPriceParam'   # price=gte:10&price=lte:50
-        - $ref: '#/components/parameters/FilterByRatingParam'  # rating=gte:4
-        - $ref: '#/components/parameters/FilterByProductCategoryParam' # product[category]=Electronics
-        - $ref: '#/components/parameters/FilterByProductTagParam'      # product[tag]=wireless
-        # Inclusion & Projection
-        - $ref: '#/components/parameters/IncludeParam' # include=brand,tags
-        - $ref: '#/components/parameters/FieldsParam'   # fields=id,name
-      x-spring-provide-args:
-        - 'com.gelerion.flexi.shop.product.catalog.infra.web.domain.FilterCriteria filterCriteria'
-        - 'org.springframework.data.domain.Pageable pageable'
+        - $ref: '#/components/parameters/ProductFilterParam'
+        - $ref: '#/components/parameters/IncludeParam'
+        - $ref: '#/components/parameters/FieldsParam'
+        - $ref: '#/components/parameters/PageableParam'
       responses:
         '200':
           description: A paginated list of products.
@@ -87,11 +76,8 @@ paths:
       description: Fetch a single product by its UUID, with optional inclusion of related resources and field projection.
       operationId: getProductById
       parameters:
-        - $ref: '#/components/parameters/ProductIdParam'
         - $ref: '#/components/parameters/IncludeParam'
         - $ref: '#/components/parameters/FieldsParam'
-      x-spring-provide-args:
-        - 'com.gelerion.flexi.shop.product.catalog.infra.web.domain.FilterCriteria filterCriteria'
       responses:
         '200':
           description: Product details. The included related resources depend on the 'include' parameter.
@@ -107,7 +93,7 @@ paths:
       tags:
         - Products
       summary: Partially update an existing product
-      description: Update one or more fields of an existing product. Only the fields provided in the request body will be updated.
+      description: Update one or more fields of an existing product. Only the fields provided in the request body will be updated. Send `null` for nullable fields to explicitly clear them (e.g., brandId).
       operationId: updateProduct
       requestBody:
         description: Fields to update in the product. All fields are optional.
@@ -149,12 +135,7 @@ paths:
   /products/{productId}/tags/{tagId}:
     parameters:
       - $ref: '#/components/parameters/ProductIdParam'
-      - name: tagId # Assuming tagId is still the identifier (integer/uuid)
-        in: path
-        required: true
-        schema:
-          type: integer # Or string format:uuid
-        description: The identifier of the tag to assign/remove.
+      - $ref: '#/components/parameters/TagIdParam'
     put:
       tags:
         - Products
@@ -172,6 +153,23 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+              examples:
+                productNotFound:
+                  summary: Product Not Found
+                  value:
+                    type: '/probs/not-found'
+                    title: 'Resource Not Found'
+                    status: 404
+                    detail: 'The product with the specified ID does not exist.'
+                    instance: '/products/123e4567-e89b-12d3-a456-000000000000/tags/1'
+                tagNotFound:
+                  summary: Tag Not Found
+                  value:
+                    type: '/probs/not-found'
+                    title: 'Resource Not Found'
+                    status: 404
+                    detail: 'The tag with the specified ID does not exist.'
+                    instance: '/products/123e4567-e89b-12d3-a456-426614174000/tags/999'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -189,11 +187,26 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
+              examples:
+                productNotFound:
+                  summary: Product Not Found
+                  value:
+                    type: '/probs/not-found'
+                    title: 'Resource Not Found'
+                    status: 404
+                    detail: 'The product with the specified ID does not exist.'
+                    instance: '/products/123e4567-e89b-12d3-a456-000000000000/tags/1'
+                tagNotAssociated:
+                  summary: Tag Not Associated With Product
+                  value:
+                    type: '/probs/not-found'
+                    title: 'Resource Not Found'
+                    status: 404
+                    detail: 'The tag with ID 999 is not associated with product 123e4567-e89b-12d3-a456-426614174000.'
+                    instance: '/products/123e4567-e89b-12d3-a456-426614174000/tags/999'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  # --- Other Resource Endpoints (Brands, Categories, Tags) ---
-  # These list endpoints use standard pagination/sorting/projection but not the complex product filters
   /brands:
     get:
       tags:
@@ -201,9 +214,7 @@ paths:
       summary: Retrieve a list of brands
       operationId: listBrands
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/PageableParam'
         - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
@@ -225,7 +236,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BrandCreateRequest' # Use dedicated request schema
+              $ref: '#/components/schemas/BrandCreateRequest'
       responses:
         '201':
           description: Brand created successfully.
@@ -267,7 +278,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    # Add PUT/PATCH/DELETE for Brand if needed, using BrandUpdateRequest etc.
 
   /categories:
     get:
@@ -276,9 +286,7 @@ paths:
       summary: Retrieve a list of categories
       operationId: listCategories
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/PageableParam'
         - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
@@ -300,7 +308,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CategoryCreateRequest' # Use dedicated request schema
+              $ref: '#/components/schemas/CategoryCreateRequest'
       responses:
         '201':
           description: Category created successfully.
@@ -342,7 +350,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    # Add PUT/PATCH/DELETE for Category if needed
 
   /tags:
     get:
@@ -351,9 +358,7 @@ paths:
       summary: Retrieve a list of tags
       operationId: listTags
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/SizeParam'
-        - $ref: '#/components/parameters/SortParam'
+        - $ref: '#/components/parameters/PageableParam'
         - $ref: '#/components/parameters/FieldsParam'
       responses:
         '200':
@@ -375,7 +380,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TagCreateRequest' # Use dedicated request schema
+              $ref: '#/components/schemas/TagCreateRequest'
       responses:
         '201':
           description: Tag created successfully.
@@ -429,7 +434,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TagUpdateRequest' # Use dedicated request schema
+              $ref: '#/components/schemas/TagUpdateRequest'
       responses:
         '200':
           description: Tag updated successfully.
@@ -460,7 +465,6 @@ paths:
 
 components:
   parameters:
-    # --- Resource IDs ---
     ProductIdParam:
       name: productId
       in: path
@@ -469,185 +473,213 @@ components:
         type: string
         format: uuid
       description: The UUID identifier of the product.
+      example: '123e4567-e89b-12d3-a456-426614174000'
     BrandIdParam:
       name: brandId
       in: path
       required: true
       schema:
-        type: integer # Assuming Brand ID is integer
+        type: integer
       description: The identifier of the brand.
+      example: 101
     CategoryIdParam:
       name: categoryId
       in: path
       required: true
       schema:
-        type: integer # Assuming Category ID is integer
+        type: integer
       description: The identifier of the category.
+      example: 20
     TagIdParam:
       name: tagId
       in: path
       required: true
       schema:
-        type: integer # Assuming Tag ID is integer
+        type: integer
       description: The identifier of the tag.
+      example: 5
 
-    # --- Pagination & Sorting ---
-    PageParam:
-      name: page
+    PageableParam:
       in: query
-      description: Page number of the requested page (0-indexed).
+      name: pageable
+      description: Paging and sorting options. Encoded as individual query parameters (e.g., `page=0&size=20&sort=name,asc`).
       required: false
-      schema:
-        type: integer
-        default: 0
-        minimum: 0
-    SizeParam:
-      name: size
-      in: query
-      description: Size of the requested page (number of items).
-      required: false
-      schema:
-        type: integer
-        default: 20
-        minimum: 1
-        maximum: 100
-    SortParam:
-      name: sort
-      in: query
-      description: |
-        Sorting criteria in the format: `property,(asc|desc)`.
-        Default sort order is ascending.
-        Multiple sort criteria are supported (repeat the parameter).
-        Example: `sort=name,asc&sort=price,desc`
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
       style: form
-      explode: true # Allows multiple sort=... parameters
+      explode: true
+      schema:
+        $ref: '#/components/schemas/Pageable'
 
-    # --- Filtering Parameters (Individual for GET /products) ---
-    SearchQueryParam:
-      name: q
+    ProductFilterParam:
       in: query
-      description: Full-text search query string across relevant fields.
+      name: filter
+      description: >
+        Flexible product filters; each inner field becomes its own query
+        parameter (e.g., `q=mouse&brand=Logitech&price=gte:10`).
       required: false
-      schema:
-        type: string
-    FilterByBrandParam: # Changed from ID to Name
-      name: brand
-      in: query
-      description: Filters by one or more brand names. Repeat parameter for multiple values (e.g., `brand=Logitech&brand=Razer`).
-      required: false
-      schema:
-        type: array
-        items:
-          type: string # Filter by name
       style: form
-      explode: true # Generates brand=Logitech&brand=Razer
-    FilterByPriceParam:
-      name: price
-      in: query
-      description: |
-        Filter by price range using `operator:value` format (e.g., `gte:10`, `lte:50`).
-        Supported operators: `eq`, `gt`, `lt`, `gte`, `lte`.
-        Provide one value for exact match/comparison or two values for a range (repeat parameter: `price=gte:10&price=lte:50`).
-      required: false
+      explode: true
       schema:
-        type: array
-        items:
-          type: string
-          pattern: '^(eq|gt|lt|gte|lte):(\d+(\.\d+)?)$' # Lowercase operators
-        maxItems: 2
-      style: form
-      explode: true # Generates price=gte:10&price=lte:50
-    FilterByRatingParam:
-      name: rating
-      in: query
-      description: |
-        Filter by rating range using `operator:value` format (e.g., `gte:3`, `lte:5`).
-        Supported operators: `eq`, `gt`, `lt`, `gte`, `lte`.
-        Provide one value for exact match/comparison or two values for a range (repeat parameter: `rating=gte:3&rating=lte:5`).
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-          pattern: '^(eq|gt|lt|gte|lte):(\d+)$' # Lowercase operators
-        maxItems: 2
-      style: form
-      explode: true # Generates rating=gte:3&rating=lte:5
-    FilterByProductCategoryParam: # Changed from ID to Name
-      name: product[category]
-      in: query
-      description: Filters by one or more product category names. Repeat parameter for multiple values (e.g., `product[category]=Electronics&product[category]=Accessories`).
-      required: false
-      schema:
-        type: array
-        items:
-          type: string # Filter by name
-      style: form
-      explode: true # Generates product[category]=Electronics&product[category]=Accessories
-    FilterByProductTagParam: # Changed from ID to Name
-      name: product[tag]
-      in: query
-      description: Filters by one or more product tag names. Repeat parameter for multiple values (e.g., `product[tag]=wireless&product[tag]=ergonomic`).
-      required: false
-      schema:
-        type: array
-        items:
-          type: string # Filter by name
-      style: form
-      explode: true # Generates product[tag]=wireless&product[tag]=ergonomic
+        $ref: '#/components/schemas/ProductFilterCriteria'
 
-    # --- Inclusion & Projection Parameters ---
     IncludeParam:
       name: include
       in: query
       description: >
         Comma-separated list of related resources to include in the response.
-        Controls which optional nested objects are present in the `ProductResource`.
-        Possible values: `brand`, `tags`, `categories`, `images`, `specifications`.
+        Possible values defined in the 'ProductIncludeOption' enum.
+        Example: `include=brand,tags`
       required: false
       schema:
         type: array
         items:
-          type: string
-          enum:
-            - brand
-            - tags
-            - categories
-            - images
-            - specifications
+          $ref: '#/components/schemas/ProductIncludeOption'
+        example: [ brand, tags ]
       style: form
-      explode: false # Generates include=brand,tags
+      explode: false
+      example: "brand,tags"
+
     FieldsParam:
       name: fields
       in: query
       description: >
         Comma-separated list of top-level fields to include in the response resource(s).
-        Applies to the main resource and any included related resources.
-        Nested field selection (e.g., `brand.name`) is not supported via this parameter.
+        Example: `fields=id,name,price`
       required: false
       schema:
         type: array
         items:
           type: string
+        example: [ id, name, price ]
       style: form
-      explode: false # Generates fields=id,name
+      explode: false
 
   schemas:
-    # --- Resources (ProductResource, BrandResource, etc.) ---
+    Pageable:
+      type: object
+      description: >
+        Schema defining pagination and sorting properties. Used by `PageableParam`
+        with `style: form, explode: true` to generate individual query parameters
+        like `page=0&size=20&sort=name,asc&sort=price,desc`.
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Page number of the requested page (0‑indexed).
+          example: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: Size of the requested page (number of items).
+          example: 20
+        sort:
+          type: array
+          items:
+            type: string
+            pattern: '^[a-zA-Z0-9_.]+(,(asc|desc))?$'
+            description: "Sorting criteria: `property` or `property,(asc|desc)`. Default direction is 'asc'."
+          description: >
+            Sorting criteria. Repeat the `sort` parameter for multiple criteria:
+            `sort=name,asc&sort=price,desc`. If direction is omitted, 'asc' is assumed.
+          example: [ "name,asc", "price,desc" ]
+      additionalProperties: false
+
+    ProductFilterCriteria:
+      type: object
+      description: >
+        Schema defining filter properties. Used by `ProductFilterParam`
+        with `style: form, explode: true` to generate individual query parameters
+        like `q=mouse&brand=Logitech&price=gte:10&price=lte:50`.
+      properties:
+        q:
+          type: string
+          description: Full‑text search query string across relevant fields.
+          example: gaming mouse
+        brand:
+          type: array
+          items: { type: string }
+          description: >
+            Filters by one or more brand names. Encoded as repeated parameter
+            (e.g.,`brand=Logitech&brand=Razer`).
+          example: [ Logitech, Razer ]
+        price:
+          type: array
+          items:
+            type: string
+            pattern: '^(eq|gt|lt|gte|lte):\d+(\.\d+)?$'
+          maxItems: 2
+          description: |
+            Filter by price range using `operator:value` (e.g.,`gte:10`,`lte:50`).
+            Supported operators: `eq`,`gt`,`lt`,`gte`,`lte`.
+            Repeat parameter for range: `price=gte:10&price=lte:50`.
+          example: [ gte:10, lte:50 ]
+        rating:
+          type: array
+          items:
+            type: string
+            pattern: '^(eq|gt|lt|gte|lte):\d+$'
+            examples: [ gte:4, lte:5 ]
+          maxItems: 2
+          description: |
+            Filter by rating range using `operator:value` (e.g `gte:4`).
+            Supported operators: `eq`,`gt`,`lt`,`gte`,`lte`.
+            Repeat parameter for range: `rating=gte:4&rating=lte:5`.
+          example: [ gte:4 ]
+        status:
+          type: string
+          description: Filter by product status.
+          enum: [ active, inactive, discontinued ]
+          example: active
+        inventoryQuantity:
+          type: string
+          pattern: '^(eq|gt|lt|gte|lte):\d+$'
+          description: Filter by inventory quantity using operator:value (e.g., `inventoryQuantity=gte:100`).
+          example: "gte:100"
+        name:
+          type: string
+          description: Filter by product name (exact match assumed, server might implement case-insensitivity or partial matching).
+          example: "Ergonomic Keyboard"
+        "product[category]":
+          type: array
+          items: { type: string }
+          description: >
+            Filters by one or more product category names. Repeat parameter
+            (e.g., `product[category]=Electronics&product[category]=Accessories`).
+          example: [ Electronics, Accessories ]
+        "product[tag]":
+          type: array
+          items: { type: string }
+          description: >
+            Filters by one or more product tag names. Repeat parameter
+            (e.g., `product[tag]=wireless&product[tag]=ergonomic`).
+          example: [ wireless, ergonomic ]
+      additionalProperties: false
+
+    ProductIncludeOption:
+      type: string
+      description: One of the related resource names you can include.
+      enum:
+        - brand
+        - tags
+        - categories
+        - images
+        - specifications
+      example: brand
+
     ProductResource:
       type: object
       description: Represents a product, potentially including related resources based on the 'include' parameter.
       required:
+        - id
         - name
         - description
         - price
         - status
         - inventoryQuantity
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -660,19 +692,16 @@ components:
           maxLength: 255
           description: Name of the product.
           example: 'Wireless Mouse'
-          x-field-extra-annotation: "@jakarta.validation.constraints.NotNull\n@jakarta.validation.constraints.Size(min=1, max=255)"
         description:
           type: string
           description: Detailed description of the product.
           example: 'A high-quality wireless mouse with ergonomic design.'
-          x-field-extra-annotation: "@jakarta.validation.constraints.NotNull"
         price:
           type: number
           format: float
           minimum: 0.0
           description: Price of the product.
           example: 29.99
-          x-field-extra-annotation: "@jakarta.validation.constraints.NotNull"
         status:
           type: string
           enum: [active, inactive, discontinued]
@@ -696,8 +725,7 @@ components:
           format: date-time
           readOnly: true
           description: Timestamp when the product was last updated.
-          example: '2023-10-02T12:00:00Z'
-        # Optional Related Resources (Removed nullable: true)
+          example: '2023-10-02T15:30:00Z'
         brand:
           $ref: '#/components/schemas/BrandResource'
           description: Brand details (included if 'brand' is specified in 'include' parameter).
@@ -718,79 +746,113 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ImageResource'
-          description: List of product images (controlled by 'include=images').
+          description: List of product images (included if 'images' is specified in 'include' parameter).
           readOnly: true
         specifications:
           type: array
           items:
             $ref: '#/components/schemas/SpecificationResource'
-          description: List of product specifications (controlled by 'include=specifications').
+          description: List of product specifications (included if 'specifications' is specified in 'include' parameter).
           readOnly: true
+      example:
+        id: '123e4567-e89b-12d3-a456-426614174000'
+        name: 'Wireless Mouse'
+        description: 'A high-quality wireless mouse with ergonomic design.'
+        price: 29.99
+        status: 'active'
+        inventoryQuantity: 150
+        createdAt: '2023-10-01T12:00:00Z'
+        updatedAt: '2023-10-02T15:30:00Z'
 
     BrandResource:
       type: object
       description: Represents a brand.
       required:
+        - id
         - name
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
           readOnly: true
-          example: 2
+          example: 101
         name:
           type: string
           maxLength: 255
           example: 'Logitech'
         description:
-          type: string
-          # Removed nullable: true, optionality handled by not being required
+          type: [ 'string', 'null' ]
+          description: Optional description of the brand.
           example: 'A leading manufacturer of computer peripherals.'
         createdAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-01-15T10:00:00Z'
         updatedAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-01-15T10:00:00Z'
+      example:
+        id: 101
+        name: 'Logitech'
+        description: 'A leading manufacturer of computer peripherals.'
+        createdAt: '2023-01-15T10:00:00Z'
+        updatedAt: '2023-01-15T10:00:00Z'
 
     CategoryResource:
       type: object
       description: Represents a product category.
       required:
+        - id
         - name
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
           readOnly: true
-          example: 3
+          example: 20
         name:
           type: string
           maxLength: 255
           example: 'Electronics'
-          x-field-extra-annotation: "@jakarta.validation.constraints.NotNull\n@jakarta.validation.constraints.Size(min=1, max=255)"
         parentId:
-          type: integer
+          type: [ 'integer', 'null' ]
+          description: The ID of the parent category, or null if it's a top-level category.
           example: 1
         createdAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-01-20T11:00:00Z'
         updatedAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-01-20T11:00:00Z'
+      example:
+        id: 21
+        name: 'Peripherals'
+        parentId: 20
+        createdAt: '2023-01-21T12:00:00Z'
+        updatedAt: '2023-01-21T12:00:00Z'
 
     TagResource:
       type: object
       description: Represents a tag that can be applied to products.
       required:
+        - id
         - name
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
           readOnly: true
-          example: 4
+          example: 5
         name:
           type: string
           maxLength: 255
@@ -799,28 +861,39 @@ components:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-02-10T09:00:00Z'
         updatedAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-02-10T09:00:00Z'
+      example:
+        id: 5
+        name: 'wireless'
+        createdAt: '2023-02-10T09:00:00Z'
+        updatedAt: '2023-02-10T09:00:00Z'
 
     ImageResource:
       type: object
       description: Represents an image associated with a product.
       required:
+        - id
         - imageUrl
         - isPrimary
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
           readOnly: true
-          example: 10
+          example: 301
         imageUrl:
           type: string
           format: uri
-          example: 'https://cdn.flexishop.com/images/product1.jpg'
+          example: 'https://cdn.flexishop.com/images/mouse_primary.jpg'
         altText:
-          type: string
+          type: [ 'string', 'null' ]
+          description: Optional alternative text for the image.
           example: 'Side view of the wireless mouse'
         isPrimary:
           type: boolean
@@ -830,22 +903,34 @@ components:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-10-01T13:00:00Z'
         updatedAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-10-01T13:00:00Z'
+      example:
+        id: 301
+        imageUrl: 'https://cdn.flexishop.com/images/mouse_primary.jpg'
+        altText: 'Side view of the wireless mouse'
+        isPrimary: true
+        createdAt: '2023-10-01T13:00:00Z'
+        updatedAt: '2023-10-01T13:00:00Z'
 
     SpecificationResource:
       type: object
       description: Represents a specific technical detail or feature of a product.
       required:
+        - id
         - name
         - value
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: integer
           readOnly: true
-          example: 5
+          example: 45
         name:
           type: string
           maxLength: 255
@@ -858,13 +943,19 @@ components:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-10-01T14:00:00Z'
         updatedAt:
           type: string
           format: date-time
           readOnly: true
+          example: '2023-10-01T14:00:00Z'
+      example:
+        id: 45
+        name: 'Battery Life'
+        value: 'Up to 12 months'
+        createdAt: '2023-10-01T14:00:00Z'
+        updatedAt: '2023-10-01T14:00:00Z'
 
-    # --- Request Bodies ---
-    # Define separate request schemas for POST/PUT/PATCH
     ProductCreateRequest:
       type: object
       description: Data required to create a new product.
@@ -895,24 +986,35 @@ components:
           minimum: 0
           default: 0
           example: 50
-        # Use IDs for association on creation
         brandId:
           type: integer
-          example: 2
+          description: ID of the existing brand to associate.
+          example: 101
         categoryIds:
           type: array
           items:
             type: integer
-          example: [ 1, 2 ]
+          description: List of existing category IDs to associate.
+          example: [ 21, 25 ]
         tagIds:
           type: array
           items:
             type: integer
-          example: [ 3, 4, 5 ]
+          description: List of existing tag IDs to associate.
+          example: [ 6, 8 ]
+      example:
+        name: 'Ergonomic Keyboard'
+        description: 'A comfortable keyboard designed for long typing sessions.'
+        price: 79.95
+        status: 'active'
+        inventoryQuantity: 50
+        brandId: 101
+        categoryIds: [ 21, 25 ]
+        tagIds: [ 6, 8 ]
 
-    ProductUpdateRequest: # For PATCH
+    ProductUpdateRequest:
       type: object
-      description: Fields to partially update for an existing product. All fields are optional.
+      description: Fields to partially update for an existing product. All fields are optional. Send `null` for nullable fields like `brandId` to explicitly clear them.
       properties:
         name:
           type: string
@@ -920,7 +1022,7 @@ components:
           example: 'Ergonomic Keyboard Pro'
         description:
           type: string
-          example: 'An updated description for the pro version.'
+          example: 'An updated description for the pro version with backlit keys.'
         price:
           type: number
           format: float
@@ -934,21 +1036,28 @@ components:
           type: integer
           minimum: 0
           example: 75
-        # Allow updating associations via IDs (optional)
         brandId:
-          type: integer
-          # Use type: ['integer', 'null'] if explicit null is needed to *remove* association
-          # example: null
+          type: [ 'integer', 'null' ]
+          description: "ID of the brand to associate. Send `null` to remove the association."
+          example: null
         categoryIds:
           type: array
           items:
             type: integer
-          description: Replace the list of associated category IDs. Send empty array `` to remove all.
+          description: Replace the list of associated category IDs. Send empty array `[]` to remove all.
+          example: [ 21 ]
         tagIds:
           type: array
           items:
             type: integer
-          description: Replace the list of associated tag IDs. Send empty array `` to remove all.
+          description: Replace the list of associated tag IDs. Send empty array `[]` to remove all.
+          example: [ 6, 8, 10 ]
+      example:
+        description: 'An updated description for the pro version with backlit keys.'
+        price: 89.95
+        inventoryQuantity: 75
+        brandId: null
+        tagIds: [ 6, 8, 10 ]
 
     BrandCreateRequest:
       type: object
@@ -959,10 +1068,13 @@ components:
         name:
           type: string
           maxLength: 255
-          example: 'NewBrand'
+          example: 'FlexiBrand'
         description:
-          type: string
-          example: 'Description for NewBrand.'
+          type: [ 'string', 'null' ]
+          example: 'Our own brand of quality accessories.'
+      example:
+        name: 'FlexiBrand'
+        description: 'Our own brand of quality accessories.'
 
     CategoryCreateRequest:
       type: object
@@ -973,10 +1085,14 @@ components:
         name:
           type: string
           maxLength: 255
-          example: 'NewCategory'
+          example: 'Monitors'
         parentCategoryId:
-          type: integer
-          example: 1
+          type: [ 'integer', 'null' ]
+          description: ID of the parent category, or null for a top-level category.
+          example: 20
+      example:
+        name: 'Monitors'
+        parentCategoryId: 20
 
     TagCreateRequest:
       type: object
@@ -987,20 +1103,23 @@ components:
         name:
           type: string
           maxLength: 255
-          example: 'new-feature'
+          example: 'gaming'
+      example:
+        name: 'gaming'
 
-    TagUpdateRequest: # For PUT (Full Replacement)
+    TagUpdateRequest:
       type: object
-      description: Data required to fully update a tag.
+      description: Data required to fully update a tag (currently only name is updatable).
       required:
-        - name # Name might be required even for PUT if it's the primary content
+        - name
       properties:
         name:
           type: string
           maxLength: 255
-          example: 'updated-feature-name'
+          example: 'high-performance-gaming'
+      example:
+        name: 'high-performance-gaming'
 
-    # --- Pagination Schemas ---
     PageInfo:
       type: object
       description: Metadata associated with a paginated response, mirroring Spring Data Page structure.
@@ -1008,42 +1127,69 @@ components:
         totalPages:
           type: integer
           readOnly: true
+          example: 10
         totalElements:
           type: integer
           format: int64
           readOnly: true
+          example: 195
         size:
           type: integer
           readOnly: true
+          description: The number of items requested per page.
+          example: 20
         number:
           type: integer
           readOnly: true
+          description: The page number (0-indexed) returned.
+          example: 0
         numberOfElements:
           type: integer
           readOnly: true
+          description: The number of items in the current page.
+          example: 20
         first:
           type: boolean
           readOnly: true
+          example: true
         last:
           type: boolean
           readOnly: true
+          example: false
         empty:
           type: boolean
           readOnly: true
-        sort: # Sort is optional (not in required list)
+          example: false
+        sort:
           type: array
           items:
             $ref: '#/components/schemas/SortInfo'
           readOnly: true
-      required: # Sort is not required here
+          example:
+            - property: 'name'
+              direction: 'asc'
+              ignoreCase: false
+              nullHandling: 'native'
+      required:
         - totalPages
         - totalElements
         - size
         - number
-        - numberOfElements
-        - first
-        - last
         - empty
+      example:
+        totalPages: 10
+        totalElements: 195
+        size: 20
+        number: 0
+        numberOfElements: 20
+        first: true
+        last: false
+        empty: false
+        sort:
+          - property: 'name'
+            direction: 'asc'
+            ignoreCase: false
+            nullHandling: 'native'
 
     SortInfo:
       type: object
@@ -1052,26 +1198,26 @@ components:
         property:
           type: string
           readOnly: true
+          example: 'name'
         direction:
           type: string
-          enum:
-            - asc
-            - desc
+          enum: [ asc, desc ]
           readOnly: true
+          example: 'asc'
         ignoreCase:
           type: boolean
           readOnly: true
+          example: false
         nullHandling:
           type: string
-          enum:
-            - native
-            - nulls_first
-            - nulls_last
+          enum: [ native, nulls_first, nulls_last ]
           readOnly: true
+          example: 'native'
       required:
         - property
         - direction
         - ignoreCase
+        - nullHandling
 
     ProductPage:
       description: A paginated list of products.
@@ -1085,6 +1231,37 @@ components:
                 $ref: '#/components/schemas/ProductResource'
           required:
             - content
+      example:
+        totalPages: 10
+        totalElements: 195
+        size: 2
+        number: 1
+        numberOfElements: 2 #
+        first: false
+        last: false
+        empty: false
+        sort:
+          - property: 'name'
+            direction: 'asc'
+            ignoreCase: false
+            nullHandling: 'native'
+        content: # Include the content array in the example
+          - id: '123e4567-e89b-12d3-a456-426614174000'
+            name: 'Wireless Mouse'
+            description: 'A high-quality wireless mouse with ergonomic design.'
+            price: 29.99
+            status: 'active'
+            inventoryQuantity: 150
+            createdAt: '2023-10-01T12:00:00Z'
+            updatedAt: '2023-10-02T15:30:00Z'
+          - id: '789a0123-b456-78c9-d012-345678901234'
+            name: 'Ergonomic Keyboard'
+            description: 'A comfortable keyboard.'
+            price: 79.95
+            status: 'active'
+            inventoryQuantity: 50
+            createdAt: '2023-11-01T10:00:00Z'
+            updatedAt: '2023-11-05T16:20:00Z'
 
     BrandPage:
       description: A paginated list of brands.
@@ -1098,6 +1275,36 @@ components:
                 $ref: '#/components/schemas/BrandResource'
           required:
             - content
+      example:
+        totalPages: 5
+        totalElements: 98
+        size: 20
+        number: 0
+        numberOfElements: 20
+        first: true
+        last: false
+        empty: false
+        sort:
+          - property: 'name'
+            direction: 'asc'
+            ignoreCase: false
+            nullHandling: 'native'
+        content:
+          - id: 101
+            name: 'Logitech'
+            description: 'A leading manufacturer of computer peripherals.'
+            createdAt: '2023-01-15T10:00:00Z'
+            updatedAt: '2023-01-15T10:00:00Z'
+          - id: 102
+            name: 'Razer'
+            description: 'High-performance gaming hardware, software and systems.'
+            createdAt: '2023-01-16T11:30:00Z'
+            updatedAt: '2023-01-16T11:30:00Z'
+          - id: 103
+            name: 'Corsair'
+            description: 'PC components, gaming peripherals and enthusiast memory.'
+            createdAt: '2023-01-17T09:15:00Z'
+            updatedAt: '2023-01-17T09:15:00Z'
 
     CategoryPage:
       description: A paginated list of categories.
@@ -1111,6 +1318,36 @@ components:
                 $ref: '#/components/schemas/CategoryResource'
           required:
             - content
+      example:
+        totalPages: 2
+        totalElements: 35
+        size: 20
+        number: 1
+        numberOfElements: 15
+        first: false
+        last: true
+        empty: false
+        sort:
+          - property: 'name'
+            direction: 'asc'
+            ignoreCase: false
+            nullHandling: 'native'
+        content:
+          - id: 20
+            name: 'Electronics'
+            parentId: null
+            createdAt: '2023-01-20T11:00:00Z'
+            updatedAt: '2023-01-20T11:00:00Z'
+          - id: 21
+            name: 'Peripherals'
+            parentId: 20
+            createdAt: '2023-01-21T12:00:00Z'
+            updatedAt: '2023-01-21T12:00:00Z'
+          - id: 22
+            name: 'Mice'
+            parentId: 21
+            createdAt: '2023-01-22T14:05:00Z'
+            updatedAt: '2023-01-22T14:05:00Z'
 
     TagPage:
       description: A paginated list of tags.
@@ -1124,8 +1361,30 @@ components:
                 $ref: '#/components/schemas/TagResource'
           required:
             - content
+    example:
+      totalPages: 3
+      totalElements: 42
+      size: 15
+      number: 0
+      numberOfElements: 15
+      first: true
+      last: false
+      empty: false
+      sort: [ ]
+      content:
+        - id: 5
+          name: 'wireless'
+          createdAt: '2023-02-10T09:00:00Z'
+          updatedAt: '2023-02-10T09:00:00Z'
+        - id: 6
+          name: 'ergonomic'
+          createdAt: '2023-02-11T11:00:00Z'
+          updatedAt: '2023-02-11T11:00:00Z'
+        - id: 7
+          name: 'gaming'
+          createdAt: '2023-02-12T15:30:00Z'
+          updatedAt: '2023-02-12T15:30:00Z'
 
-    # --- Error Handling ---
     ProblemDetail:
       type: object
       description: A machine-readable format for specifying errors in HTTP API responses based on RFC 7807.
@@ -1134,27 +1393,54 @@ components:
           type: string
           format: uri
           default: 'about:blank'
+          description: An absolute URI that identifies the problem type.
+          example: '/probs/validation-error'
         title:
           type: string
+          description: A short, human-readable summary of the problem type.
+          example: 'Validation Error'
         status:
           type: integer
           format: int32
           minimum: 100
           maximum: 599
+          description: The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 400
         detail:
           type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+          example: 'Request validation failed.'
         instance:
           type: string
           format: uri-reference
+          description: A URI reference that identifies the specific resource associated with this occurrence of the problem.
+          example: '/products'
         invalidParams:
           type: array
           items:
             $ref: '#/components/schemas/InvalidParam'
-          # Removed nullable: true
+          description: An array of objects detailing validation errors. Only present for validation-related problems.
+          example:
+            - name: 'name'
+              reason: 'size must be between 1 and 255'
+            - name: 'price'
+              reason: 'must be greater than or equal to 0'
       required:
         - type
         - title
         - status
+      example:
+        type: '/probs/validation-error'
+        title: 'Validation Error'
+        status: 400
+        detail: 'Request validation failed.'
+        instance: '/products'
+        invalidParams:
+          - name: 'name'
+            reason: 'size must be between 1 and 255'
+          - name: 'price'
+            reason: 'must be greater than or equal to 0'
+
 
     InvalidParam:
       type: object
@@ -1162,8 +1448,12 @@ components:
       properties:
         name:
           type: string
+          description: The name of the invalid parameter or field.
+          example: 'price'
         reason:
           type: string
+          description: The reason why the parameter is invalid.
+          example: 'must be greater than or equal to 0'
       required:
         - name
         - reason
@@ -1175,9 +1465,9 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          examples: # Using examples map
+          examples:
             validationError:
-              summary: Example Validation Error
+              summary: Validation Error
               value:
                 type: '/probs/validation-error'
                 title: 'Validation Error'
@@ -1189,75 +1479,133 @@ components:
                     reason: 'size must be between 1 and 255'
                   - name: 'price'
                     reason: 'must be greater than or equal to 0'
+            invalidQueryParam:
+              summary: Invalid Query Parameter Format
+              value:
+                type: '/probs/invalid-parameter'
+                title: 'Invalid Parameter'
+                status: 400
+                detail: "Invalid format for parameter 'price'. Expected 'operator:value'."
+                instance: '/products?price=abc'
     Unauthorized:
       description: Unauthorized - Authentication credentials are required and are missing or invalid.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example: # Single example still okay here
-            type: '/probs/unauthorized'
-            title: 'Unauthorized'
-            status: 401
-            detail: 'Valid authentication credentials are required to access this resource.'
+          examples:
+            missingCredentials:
+              summary: Missing Credentials
+              value:
+                type: '/probs/unauthorized'
+                title: 'Unauthorized'
+                status: 401
+                detail: 'Valid authentication credentials are required to access this resource.'
+            invalidToken:
+              summary: Invalid Token
+              value:
+                type: '/probs/unauthorized'
+                title: 'Unauthorized'
+                status: 401
+                detail: 'Authentication token is invalid or expired.'
     Forbidden:
       description: Forbidden - The authenticated user does not have permission to perform the requested operation.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example:
-            type: '/probs/forbidden'
-            title: 'Forbidden'
-            status: 403
-            detail: 'You do not have sufficient permissions to create a product.'
+          examples:
+            insufficientPermissions:
+              summary: Insufficient Permissions
+              value:
+                type: '/probs/forbidden'
+                title: 'Forbidden'
+                status: 403
+                detail: 'You do not have sufficient permissions to create a product.'
+                instance: '/products'
     NotFound:
       description: Not Found - The requested resource could not be found.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example:
-            type: '/probs/not-found'
-            title: 'Resource Not Found'
-            status: 404
-            detail: 'The product with the specified ID does not exist.'
-            instance: '/products/123e4567-e89b-12d3-a456-426699999999'
+          examples:
+            productNotFound:
+              summary: Product Not Found
+              value:
+                type: '/probs/not-found'
+                title: 'Resource Not Found'
+                status: 404
+                detail: 'The product with the specified ID does not exist.'
+                instance: '/products/123e4567-e89b-12d3-a456-000000000000'
+            brandNotFound:
+              summary: Brand Not Found
+              value:
+                type: '/probs/not-found'
+                title: 'Resource Not Found'
+                status: 404
+                detail: 'The brand with the specified ID does not exist.'
+                instance: '/brands/9999'
+            genericNotFound:
+              summary: Generic Not Found
+              value:
+                type: '/probs/not-found'
+                title: 'Resource Not Found'
+                status: 404
+                detail: 'The requested resource could not be found.'
+                instance: '/some/unknown/path'
     Conflict:
       description: Conflict - The request could not be completed due to a conflict with the current state of the resource.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example:
-            type: '/probs/conflict'
-            title: 'Conflict'
-            status: 409
-            detail: 'A tag with the name "wireless" already exists.'
-            instance: '/tags'
+          examples:
+            duplicateTag:
+              summary: Duplicate Tag Name
+              value:
+                type: '/probs/conflict/duplicate-resource'
+                title: 'Conflict'
+                status: 409
+                detail: 'A tag with the name "wireless" already exists.'
+                instance: '/tags'
+            deleteConflict:
+              summary: Deletion Conflict (Resource In Use)
+              value:
+                type: '/probs/conflict/resource-in-use'
+                title: 'Conflict'
+                status: 409
+                detail: 'Cannot delete tag with ID 5 because it is currently associated with one or more products.'
+                instance: '/tags/5'
     UnprocessableEntity:
-      description: Unprocessable Entity - The request was well-formed but contained semantic errors.
+      description: Unprocessable Entity - The request was well-formed but contained semantic errors (business logic validation).
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example:
-            type: '/probs/unprocessable-entity'
-            title: 'Unprocessable Entity'
-            status: 422
-            detail: 'Cannot assign a discontinued category to an active product.'
-            instance: '/products'
+          examples:
+            semanticError:
+              summary: Business Logic Error
+              value:
+                type: '/probs/unprocessable-entity'
+                title: 'Unprocessable Entity'
+                status: 422
+                detail: 'Cannot assign a discontinued category to an active product.'
+                instance: '/products/123e4567-e89b-12d3-a456-426614174000'
     InternalServerError:
       description: Internal Server Error - An unexpected error occurred on the server.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
-          example:
-            type: '/probs/internal-server-error'
-            title: 'Internal Server Error'
-            status: 500
-            detail: 'An unexpected error occurred while processing the request. Please try again later.'
+          examples:
+            unexpectedError:
+              summary: Unexpected Server Error
+              value:
+                type: '/probs/internal-server-error'
+                title: 'Internal Server Error'
+                status: 500
+                detail: 'An unexpected error occurred while processing the request. Please try again later or contact support if the problem persists.'
 
   securitySchemes:
     BearerAuth:
@@ -1267,4 +1615,4 @@ components:
       description: "Authentication using a JSON Web Token (JWT) provided in the Authorization header (e.g., `Authorization: Bearer <token>`)."
 
 security:
-  - BearerAuth:
+  - BearerAuth: [ ]
