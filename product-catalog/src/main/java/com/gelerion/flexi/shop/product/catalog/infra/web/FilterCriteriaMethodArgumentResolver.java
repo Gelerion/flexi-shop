@@ -1,7 +1,7 @@
 package com.gelerion.flexi.shop.product.catalog.infra.web;
 
+import com.gelerion.flexi.shop.product.catalog.api.query.filtering.parser.QueryFilterParser;
 import com.gelerion.flexi.shop.product.catalog.infra.web.domain.FilterCriteria;
-import com.gelerion.flexi.shop.product.catalog.infra.web.filter.parser.FilterParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -44,16 +44,15 @@ Defining Filtering Mechanisms and API Contract
 
  */
 public class FilterCriteriaMethodArgumentResolver implements HandlerMethodArgumentResolver {
-
     private static final String FIELDS_PARAM = "fields";
     private static final String INCLUDE_PARAM = "include";
     private static final Set<String> SKIP_FILTER_PARAMS = Set.of("page", "size", "sort", FIELDS_PARAM, INCLUDE_PARAM);
     private static final String COMMA = ",";
 
 
-    private final FilterParser filterParser;
+    private final QueryFilterParser filterParser;
 
-    public FilterCriteriaMethodArgumentResolver(FilterParser filterParser) {
+    public FilterCriteriaMethodArgumentResolver(QueryFilterParser filterParser) {
         this.filterParser = filterParser;
     }
 

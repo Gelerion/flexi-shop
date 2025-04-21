@@ -4,21 +4,17 @@ import com.gelerion.flexi.shop.product.catalog.common.JooqHelpers;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
+import com.gelerion.flexi.shop.product.catalog.domain.repositories.Paginations;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
+import com.gelerion.flexi.shop.product.catalog.domain.specifications.ProductSpecs;
+import com.gelerion.flexi.shop.product.catalog.models.ProductFilterCriteria;
 import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.SortField;
+import org.jooq.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,14 +31,18 @@ import static org.jooq.impl.DSL.*;
 @Slf4j
 @Repository
 public class ProductRepositoryJooq implements ProductRepository {
-    private static final long ZERO_RECORDS = 0L;
-
     private final DSLContext dsl;
     private final CompositeProductRepository compositeProductRepository;
+    private final ProductSpecs productSpecs;
+    private final Paginations paginations;
 
-    public ProductRepositoryJooq(DSLContext dsl, CompositeProductRepository compositeProductRepository) {
+    public ProductRepositoryJooq(DSLContext dsl,
+                                 CompositeProductRepository compositeProductRepository,
+                                 ProductSpecs productSpecs, Paginations paginations) {
         this.dsl = dsl;
         this.compositeProductRepository = compositeProductRepository;
+        this.productSpecs = productSpecs;
+        this.paginations = paginations;
     }
 
     @Override
@@ -62,106 +62,24 @@ public class ProductRepositoryJooq implements ProductRepository {
 
     @Override
     public Page<ProductEntity> findAll(Pageable pageable) {
-        // fetch total count for pagination metadata
-        long total = dsl.selectCount()
+        //Use seek instead of limit/offset -- https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/seek-clause/
+        var query = dsl.select(PRODUCT.asterisk())
                 .from(PRODUCT)
-                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
-                .fetchOptional(0, long.class)
-                .orElse(0L);
+                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID));
 
-        log.info("Total records found: {}", total);
-        if (total == ZERO_RECORDS) {
-            log.info("No records found, returning empty Page.");
-            return Page.empty(pageable);
-        }
-
-        //Use seek instead of limit/offet -- https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/seek-clause/
-        List<ProductEntity> products = dsl.select(PRODUCT.asterisk())
-                .from(PRODUCT)
-                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
-                .orderBy(convertSortToOrderBy(pageable.getSort()))
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(ProductEntity.class);
-
-        log.info("Returning {} products for page {} of size {}",
-                products.size(), pageable.getPageNumber(), pageable.getPageSize());
-        return new PageImpl<>(products, pageable, total);
+        return paginations.paginate(query, pageable, ProductEntity.class);
     }
 
     @Override
-    public Page<ProductEntity> findAll(Condition condition, Pageable pageable) {
-        log.info("Executing query with condition: {}", condition);
+    public Page<ProductEntity> findAll(ProductFilterCriteria criteria, Pageable pageable) {
+        Condition where = productSpecs.byCriteria(criteria).toCondition(PRODUCT);
 
-        Field<BigDecimal> field = field(PRODUCT.PRICE);
-
-//        Condition condition1 = toCondition(field);
-//        LessThan<? extends Number> numberLessThan = new LessThan<>();
-//        numberLessThan.toCondition(field, BigDecimal.valueOf(4));
-
-        /*
-         //JOIN with a product_tag mapping table and the tag table
-           condition = condition.and(DSL.exists(
-         //      DSL.selectOne()
-         //         .from(Tables.PRODUCT_TAG)
-         //         .join(Tables.TAG).on(Tables.PRODUCT_TAG.TAG_ID.eq(Tables.TAG.ID)) // Or TAG.SLUG/NAME
-         //         .where(Tables.PRODUCT_TAG.PRODUCT_ID.eq(PRODUCT.ID))
-         //         .and(Tables.TAG.ID.in(tagIds)) // Or TAG.SLUG/NAME
-         // ));
-         */
-
-        // fetch total count for pagination metadata
-        //productRepository.countByCriteria(queryParams);
-        long total = dsl.selectCount()
+        var query = dsl.select(PRODUCT.asterisk())
                 .from(PRODUCT)
                 .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
-                .where(condition)
-                .fetchOptional(0, long.class)
-                .orElse(0L);
+                .where(where);
 
-        log.info("Total records found: {}", total);
-        if (total == ZERO_RECORDS) {
-            log.info("No records found, returning empty Page.");
-            return Page.empty(pageable);
-        }
-
-        //Use seek instead of limit/offet -- https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/seek-clause/
-        List<ProductEntity> products = dsl.select(PRODUCT.asterisk())
-                .from(PRODUCT)
-                .join(BRAND).on(PRODUCT.BRAND_ID.eq(BRAND.ID))
-                .where(condition)
-                .orderBy(convertSortToOrderBy(pageable.getSort()))
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(ProductEntity.class);
-
-        LessThan priceLessThan = new LessThan();
-        Condition condition1 = priceLessThan.toCondition(PRODUCT.PRICE, BigDecimal.valueOf(10));
-        //PRODUCT.PRICE.getName()
-
-        log.info("Returning {} products for page {} of size {}",
-                products.size(), pageable.getPageNumber(), pageable.getPageSize());
-        return new PageImpl<>(products, pageable, total);
-    }
-
-    public record LessThan() {
-        public <T extends Number> Condition toCondition(Field<T> field, T value) {
-            return field.lessThan(value);
-        }
-    }
-
-
-    private List<SortField<?>> convertSortToOrderBy(Sort sort) {
-        List<SortField<?>> orderByFields = new ArrayList<>();
-        for (Sort.Order order : sort) {
-            if (order.getDirection().isAscending()) {
-                orderByFields.add(PRODUCT.field(order.getProperty()).asc());
-            } else {
-                orderByFields.add(PRODUCT.field(order.getProperty()).desc());
-            }
-            log.debug("Sorting by: {} {}", order.getProperty(), order.getDirection());
-        }
-        return orderByFields;
+        return paginations.paginate(query, pageable, ProductEntity.class);
     }
 
     @Override
@@ -172,9 +90,15 @@ public class ProductRepositoryJooq implements ProductRepository {
     @Repository
     public static class ProductCompositeRepositoryJooq implements ProductRepository.CompositeProductRepository {
         private final DSLContext dsl;
+        private final ProductSpecs productSpecs;
+        private final Paginations paginations;
 
-        public ProductCompositeRepositoryJooq(DSLContext dsl) {
+        public ProductCompositeRepositoryJooq(DSLContext dsl,
+                                              ProductSpecs productSpecs,
+                                              Paginations paginations) {
             this.dsl = dsl;
+            this.productSpecs = productSpecs;
+            this.paginations = paginations;
         }
 
         //Why multisets for Dynamic Data Inclusion?
@@ -203,9 +127,40 @@ public class ProductRepositoryJooq implements ProductRepository {
          */
         @Override
         public Optional<ProductCompositeEntity> findById(UUID productId, List<ProductIncludeOption> includes) {
+            return select(includes)
+                    .where(PRODUCT.ID.eq(productId))
+                    .fetchOptional(mapping(ProductCompositeEntity::new));
+        }
+
+        @Override
+        public Optional<ProductCompositeEntity> findById(UUID productId) {
+            return select(List.of(ProductIncludeOption.values()))
+                    .where(PRODUCT.ID.eq(productId))
+                    .fetchOptional(mapping(ProductCompositeEntity::new));
+        }
+
+        @Override
+        public Page<ProductCompositeEntity> findAll(ProductFilterCriteria criteria,
+                                                    List<ProductIncludeOption> includes,
+                                                    Pageable pageable) {
+            Condition where = productSpecs.byCriteria(criteria).toCondition(PRODUCT);
+
+            var query = select(includes)
+                    .where(where);
+
+            return paginations.paginate(query, pageable, ProductCompositeEntity.class);
+        }
+
+        private SelectJoinStep<Record6<ProductEntity,
+                BrandEntity,
+                List<CategoryEntity>,
+                List<SpecificationEntity>,
+                List<ImageEntity>,
+                List<TagEntity>>>
+        select(List<ProductIncludeOption> includes) {
             return dsl.select(
                             PRODUCT.convertFrom(toProductEntity),
-                            PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
+                            PRODUCT.brand().convertFrom(toBrandEntity),
                             includes.contains(ProductIncludeOption.CATEGORIES) ?
                                     multisets.CATEGORIES : JooqHelpers.multisets.empty(CategoryEntity.class),
                             includes.contains(ProductIncludeOption.SPECIFICATIONS) ?
@@ -215,25 +170,7 @@ public class ProductRepositoryJooq implements ProductRepository {
                             includes.contains(ProductIncludeOption.TAGS) ?
                                     multisets.TAGS : JooqHelpers.multisets.empty(TagEntity.class)
                     )
-                    .from(PRODUCT)
-                    .where(PRODUCT.ID.eq(productId))
-                    .fetchOptional(mapping(ProductCompositeEntity::new));
-        }
-
-        @Override
-        public Optional<ProductCompositeEntity> findById(UUID productId) {
-            return dsl.select(
-                            PRODUCT.convertFrom(toProductEntity),
-                            // implicit join https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/implicit-join/
-                            PRODUCT.brand().as("brand").convertFrom(toBrandEntity),
-                            multisets.CATEGORIES,
-                            multisets.SPECIFICATIONS,
-                            multisets.IMAGES,
-                            multisets.TAGS
-                    )
-                    .from(PRODUCT)
-                    .where(PRODUCT.ID.eq(productId))
-                    .fetchOptional(mapping(ProductCompositeEntity::new));
+                    .from(PRODUCT);
         }
     }
 

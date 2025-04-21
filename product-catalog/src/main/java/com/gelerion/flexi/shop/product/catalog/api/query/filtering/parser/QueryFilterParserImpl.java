@@ -1,5 +1,7 @@
-package com.gelerion.flexi.shop.product.catalog.infra.web.filter.parser;
+package com.gelerion.flexi.shop.product.catalog.api.query.filtering.parser;
 
+import com.gelerion.flexi.shop.product.catalog.api.query.filtering.ComparisonOperator;
+import com.gelerion.flexi.shop.product.catalog.api.query.filtering.filters.FieldFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +11,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Component
-public class FilterParserImpl implements FilterParser {
+public class QueryFilterParserImpl implements QueryFilterParser {
     private static final String COLON = ":";
     private static final String COMMA = ",";
 
@@ -53,24 +55,24 @@ public class FilterParserImpl implements FilterParser {
 
             case String exp when exp.contains(COLON) -> { //range filter
                 // Implementation to parse "operator:value" syntax
-                // Example: Handle "rating=gte:2" -> new RangeFilter("gte", 2)
+                // Example: Handle "rating=gte:2" -> new FieldFilter("gte", 2)
                 log.atDebug().log("Processing range filter expression: '{}'", exp);
                 String[] parts = expression.split(COLON, 2);
-                yield Stream.of(createRangeFilter(parts[0], parts[1]));
+                yield Stream.of(createFilter(parts[0], parts[1]));
             }
 
             case String exp -> {
                 // Implementation to handle single or multiple values for exact match filters.
-                // Example: Handle "status=active" -> new LiteralFilter(active);
+                // Example: Handle "status=active" -> new FieldFilter(active);
                 log.debug("Processing literal filter expression: '{}'", exp);
-                yield Stream.of(new LiteralFieldFilter(exp));
+                yield Stream.of(new FieldFilter(ComparisonOperator.EQ, exp));
             }
         };
     }
 
-    private FieldFilter createRangeFilter(String operator, String value) {
-        return RangeOperator.fromString(operator)
-                .map(op -> new RangeFieldFilter(op, value))
+    private FieldFilter createFilter(String operator, String value) {
+        return ComparisonOperator.fromString(operator)
+                .map(op -> new FieldFilter(op, value))
                 .orElseThrow(() -> {
                     log.atWarn()
                             .log("Unsupported range operator: '{}'", operator);

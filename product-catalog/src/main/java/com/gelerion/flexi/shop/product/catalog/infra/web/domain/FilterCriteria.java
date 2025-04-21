@@ -1,6 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.infra.web.domain;
 
-import com.gelerion.flexi.shop.product.catalog.infra.web.filter.parser.FilterParser.FieldFilter;
+import com.gelerion.flexi.shop.product.catalog.api.query.filtering.filters.FieldFilter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
