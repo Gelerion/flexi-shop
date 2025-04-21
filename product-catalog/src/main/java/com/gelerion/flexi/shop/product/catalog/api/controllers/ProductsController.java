@@ -58,12 +58,12 @@ public class ProductsController implements ProductsApi {
                                                     List<ProductIncludeOption> include,
                                                     Pageable pageable) {
         if (include == null || include.isEmpty()) {
-            Page<ProductResource> response = productsService.listProducts(filter, pageable);
-            return ResponseEntity.ok(mapper.toProductPage(response));
+            Page<ProductResource> products = productsService.listProducts(filter, pageable);
+            return ResponseEntity.ok(mapper.toProductPage(products));
         }
 
-        Page<ProductResource> r = productsService.listProducts(filter, include, pageable);
-        return ResponseEntity.ok(mapper.toProductPage(r));
+        Page<ProductResource> products = productsService.listProducts(filter, include, pageable);
+        return ResponseEntity.ok(mapper.toProductPage(products));
     }
 
     @Override

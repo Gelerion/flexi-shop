@@ -29,29 +29,10 @@ public class ProductSpecs {
             bind(ProductFilterCriteria::getProductCategory, PRODUCT.category().NAME)
     );
 
-    private static <T extends Comparable<? super T>> JooqSpecification<ProductTable> byField(Field<T> field,
-                                                                                             FieldFilter filter) {
-        T value = field.getDataType().convert(filter.value());
-        return switch (filter.operator()) {
-            case EQ -> JooqSpecification.where(field.eq(value));
-            case GT -> JooqSpecification.where(field.gt(value));
-            case LT -> JooqSpecification.where(field.lt(value));
-            case GTE -> JooqSpecification.where(field.ge(value));
-            case LTE -> JooqSpecification.where(field.le(value));
-        };
-    }
-
     private final QueryFilterParser filterParser;
 
     public ProductSpecs(QueryFilterParser filterParser) {
         this.filterParser = filterParser;
-    }
-
-    private static <T extends Comparable<? super T>> FieldBinding bind(
-            Function<ProductFilterCriteria, ?> extractor,
-            Field<T> field
-    ) {
-        return new FieldBinding(extractor, filter -> byField(field, filter));
     }
 
     public JooqSpecification<ProductTable> byPrice(FieldFilter filter) {
@@ -63,6 +44,18 @@ public class ProductSpecs {
                 .stream()
                 .flatMap(fieldBinding -> toSpecs(criteria, fieldBinding))
                 .reduce(JooqSpecification.empty(), JooqSpecification::and);
+    }
+
+    private static <T extends Comparable<? super T>> JooqSpecification<ProductTable> byField(Field<T> field,
+                                                                                             FieldFilter filter) {
+        T value = field.getDataType().convert(filter.value());
+        return switch (filter.operator()) {
+            case EQ -> JooqSpecification.where(field.eq(value));
+            case GT -> JooqSpecification.where(field.gt(value));
+            case LT -> JooqSpecification.where(field.lt(value));
+            case GTE -> JooqSpecification.where(field.ge(value));
+            case LTE -> JooqSpecification.where(field.le(value));
+        };
     }
 
     private Stream<JooqSpecification<ProductTable>> toSpecs(ProductFilterCriteria criteria,
@@ -86,5 +79,12 @@ public class ProductSpecs {
     private record FieldBinding(
             Function<ProductFilterCriteria, ?> valueExtractor,
             Function<FieldFilter, JooqSpecification<ProductTable>> specBuilder) {
+    }
+
+    private static <T extends Comparable<? super T>> FieldBinding bind(
+            Function<ProductFilterCriteria, ?> extractor,
+            Field<T> field
+    ) {
+        return new FieldBinding(extractor, filter -> byField(field, filter));
     }
 }
