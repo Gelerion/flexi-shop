@@ -94,6 +94,9 @@ dependencies {
 	// https://github.com/maciejwalkowiak/spring-boot-startup-report
 	developmentOnly("com.maciejwalkowiak.spring:spring-boot-startup-report:0.2.0")
 
+	// Helpers
+	implementation("com.google.guava:guava:33.4.8-jre")
+
     // Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
