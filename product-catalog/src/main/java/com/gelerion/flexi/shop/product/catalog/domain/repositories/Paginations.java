@@ -23,6 +23,7 @@ public class Paginations {
         this.dsl = dsl;
     }
 
+    @SuppressWarnings("all")
     private static List<SortField<?>> toOrderBy(Sort sort) {
         return sort.stream()
                 .map(o -> o.isAscending()
