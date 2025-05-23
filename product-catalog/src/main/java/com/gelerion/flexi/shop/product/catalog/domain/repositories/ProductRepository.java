@@ -2,7 +2,6 @@ package com.gelerion.flexi.shop.product.catalog.domain.repositories;
 
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.ProductEntity;
-import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.models.ProductFilterCriteria;
 import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
 import org.springframework.data.domain.Page;
@@ -16,7 +15,9 @@ public interface ProductRepository {
 
     ProductEntity save(ProductEntity product);
 
-    Optional<ProductRecord> findById(UUID productId);
+    ProductEntity update(ProductEntity product);
+
+    Optional<ProductEntity> findById(UUID productId);
 
     Page<ProductEntity> findAll(ProductFilterCriteria criteria, Pageable pageable);
 

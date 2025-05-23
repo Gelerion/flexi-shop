@@ -3,7 +3,6 @@ package com.gelerion.flexi.shop.product.catalog.domain.repositories.impl;
 import com.gelerion.flexi.shop.product.catalog.common.JooqHelpers;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.*;
-import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.records.ProductRecord;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.Paginations;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
 import com.gelerion.flexi.shop.product.catalog.domain.specifications.ProductSpecs;
@@ -54,10 +53,11 @@ public class ProductRepositoryJooq implements ProductRepository {
     }
 
     @Override
-    public Optional<ProductRecord> findById(UUID productId) {
+    public Optional<ProductEntity> findById(UUID productId) {
         return dsl.selectFrom(PRODUCT)
                 .where(PRODUCT.ID.eq(productId))
-                .fetchOptional();
+                .fetchOptional()
+                .map(toProductEntity);
     }
 
     @Override
@@ -80,6 +80,25 @@ public class ProductRepositoryJooq implements ProductRepository {
                 .where(where);
 
         return paginations.paginate(query, pageable, ProductEntity.class);
+    }
+
+    //DSL or direct record updates?
+    //A good rule of thumb is:
+    //“If I can express it in a single record.store() or record.update(), I do. If I need any extra SQL magic, I switch to the DSL.
+    // With updates you should care about concurrent updates
+    // Use the database’s MVCC metadata (Postgres xmin)
+//    @Override
+//    @Transactional // Ensure this annotation is present
+    public ProductEntity update(ProductEntity product) {
+        if (product == null || product.getId() == null) {
+            throw new IllegalArgumentException("ProductEntity or its ID cannot be null for update");
+        }
+
+        return dsl.update(PRODUCT)
+                .set(dsl.newRecord(PRODUCT, product)) // Sets all non-null fields from productRecord
+                .where(PRODUCT.ID.eq(product.getId()))
+                .returning()
+                .fetchOneInto(ProductEntity.class);
     }
 
     @Override

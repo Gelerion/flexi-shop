@@ -6,6 +6,7 @@ import com.gelerion.flexi.shop.product.catalog.infra.mappers.ProductMapper;
 import com.gelerion.flexi.shop.product.catalog.models.ProductFilterCriteria;
 import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
 import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
+import com.gelerion.flexi.shop.product.catalog.models.ProductUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.exception.NoDataFoundException;
 import org.springframework.data.domain.Page;
@@ -57,5 +58,22 @@ public class ProductsService {
 //        Integer id = productRepository.save(productEntity.product()).id();
 //        product.setProductId(id.longValue());
         return product;
+    }
+
+    @Transactional
+    public ProductResource updateProduct(UUID productId, ProductUpdateRequest productUpdateRequest) {
+        log.debug("Updating product with id: {}. Request: {}", productId, productUpdateRequest);
+
+        return productRepository.findById(productId)
+                .map(product -> productMapper.merge(product, productUpdateRequest))
+                .map(patched -> {
+                    log.info("Patched product with id: {} for update. Patched {}", productId, patched);
+                    return productRepository.update(patched);
+                })
+                .map(productMapper::toResource)
+                .orElseThrow(() -> {
+                    log.warn("Product not found for id: {}", productId);
+                    return new NoDataFoundException("Product with id " + productId + " not found");
+                });
     }
 }

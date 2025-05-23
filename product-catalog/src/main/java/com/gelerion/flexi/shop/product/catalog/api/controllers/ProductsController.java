@@ -67,7 +67,9 @@ public class ProductsController implements ProductsApi {
     }
 
     @Override
-    public ResponseEntity<ProductResource> updateProduct(UUID productId, ProductUpdateRequest productUpdateRequest) {
-        return null;
+    public ResponseEntity<ProductResource> updateProduct(UUID productId,
+                                                         ProductUpdateRequest productUpdateRequest) {
+        ProductResource result = productsService.updateProduct(productId, productUpdateRequest);
+        return ResponseEntity.ok(result);
     }
 }

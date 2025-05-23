@@ -651,9 +651,6 @@ components:
         - description
         - price
         - status
-        - inventoryQuantity
-        - createdAt
-        - updatedAt
       properties:
         id:
           type: string
@@ -756,7 +753,7 @@ components:
           maxLength: 255
           example: 'Logitech'
         description:
-          type: [ 'string', 'null' ]
+          type: string
           description: Optional description of the brand.
           example: 'A leading manufacturer of computer peripherals.'
         createdAt:
@@ -794,7 +791,7 @@ components:
           maxLength: 255
           example: 'Electronics'
         parentId:
-          type: [ 'integer', 'null' ]
+          type: integer
           description: The ID of the parent category, or null if it's a top-level category.
           example: 1
         createdAt:
@@ -866,7 +863,7 @@ components:
           format: uri
           example: 'https://cdn.flexishop.com/images/mouse_primary.jpg'
         altText:
-          type: [ 'string', 'null' ]
+          type: string
           description: Optional alternative text for the image.
           example: 'Side view of the wireless mouse'
         isPrimary:
@@ -988,50 +985,37 @@ components:
 
     ProductUpdateRequest:
       type: object
-      description: Fields to partially update for an existing product. All fields are optional. Send `null` for nullable fields like `brandId` to explicitly clear them.
+      description: Fields to partially update for an existing product. All fields are optional. Send `null` for nullable fields to explicitly clear them.
       properties:
         name:
-          type: string
+          type: [ string, "null" ]
           maxLength: 255
           example: 'Ergonomic Keyboard Pro'
         description:
-          type: string
+          type: [ string, "null" ]
           example: 'An updated description for the pro version with backlit keys.'
         price:
-          type: number
+          type: [ number, "null" ]
           format: float
           minimum: 0.0
           example: 89.95
         status:
-          type: string
+          type: [ string, "null" ]
           enum: [ active, inactive, discontinued ]
           example: 'active'
         inventoryQuantity:
-          type: integer
+          type: [ integer, "null" ]
           minimum: 0
           example: 75
         brandId:
           type: [ 'integer', 'null' ]
           description: "ID of the brand to associate. Send `null` to remove the association."
           example: null
-        categoryIds:
-          type: array
-          items:
-            type: integer
-          description: Replace the list of associated category IDs. Send empty array `[]` to remove all.
-          example: [ 21 ]
-        tagIds:
-          type: array
-          items:
-            type: integer
-          description: Replace the list of associated tag IDs. Send empty array `[]` to remove all.
-          example: [ 6, 8, 10 ]
       example:
         description: 'An updated description for the pro version with backlit keys.'
         price: 89.95
         inventoryQuantity: 75
         brandId: null
-        tagIds: [ 6, 8, 10 ]
 
     BrandCreateRequest:
       type: object
@@ -1044,7 +1028,7 @@ components:
           maxLength: 255
           example: 'FlexiBrand'
         description:
-          type: [ 'string', 'null' ]
+          type: string
           example: 'Our own brand of quality accessories.'
       example:
         name: 'FlexiBrand'
@@ -1061,7 +1045,7 @@ components:
           maxLength: 255
           example: 'Monitors'
         parentCategoryId:
-          type: [ 'integer', 'null' ]
+          type: integer
           description: ID of the parent category, or null for a top-level category.
           example: 20
       example:

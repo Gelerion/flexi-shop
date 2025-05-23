@@ -3,19 +3,19 @@ import java.util.*
 
 buildscript {
 	dependencies {
-		classpath("org.flywaydb:flyway-database-postgresql:10.10.0")
+		classpath("org.flywaydb:flyway-database-postgresql:11.8.2")
 	}
 }
 
 plugins {
 	java
-	id("org.springframework.boot") version "3.3.1"
-	id("io.spring.dependency-management") version "1.1.5"
+	id("org.springframework.boot") version "3.4.5"
+	id("io.spring.dependency-management") version "1.1.7"
 //	id("org.springframework.cloud.contract") version "4.1.3"
-	id("org.openapi.generator") version "7.12.0"
+	id("org.openapi.generator") version "7.13.0"
 	id("idea")
-	id("org.jooq.jooq-codegen-gradle") version "3.19.10"
-	id("org.flywaydb.flyway") version "10.10.0"
+	id("org.jooq.jooq-codegen-gradle") version "3.20.4"
+	id("org.flywaydb.flyway") version "11.8.2"
 //	kotlin("jvm")
 }
 
@@ -28,6 +28,8 @@ val config = Properties().apply {
 
 object Versions {
 	const val logbook = "3.9.0"
+	const val jacksonNullable = "0.2.6"
+	const val jooq = "3.20.4"
 }
 
 java {
@@ -46,7 +48,8 @@ repositories {
 	mavenCentral()
 }
 
-extra["springCloudVersion"] = "2023.0.2"
+extra["springCloudVersion"] = "2024.0.1"
+ext["jooq.version"] = Versions.jooq
 
 dependencies {
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -96,6 +99,7 @@ dependencies {
 
 	// Helpers
 	implementation("com.google.guava:guava:33.4.8-jre")
+	implementation("org.openapitools:jackson-databind-nullable:${Versions.jacksonNullable}")
 
     // Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -134,7 +138,7 @@ openApiGenerate {
 	modelPackage.set("com.gelerion.flexi.shop.product.catalog.models") // Package for the generated models
 	configOptions.set(mapOf(
 		"interfaceOnly" to "true", // Do not generate implementations
-		"openApiNullable" to "false", // Do not annotate with custom nullable annotation
+		"openApiNullable" to "true", // Enables handling of explicit nulls vs. absent fields using JsonNullable
 		"skipDefaultInterface" to "true", // Do not generate stub implementations
 		"additionalModelTypeAnnotations" to "@lombok.Data\n\t@lombok.AllArgsConstructor\n\t@lombok.NoArgsConstructor", // Add Lombok annotations
 		"useTags" to "true", // Generate one interface per tag
@@ -150,6 +154,7 @@ openApiGenerate {
 		mapOf(
 			"Pageable" to "org.springframework.data.domain.Pageable",
 			"SortOrderInfo" to "org.springframework.data.domain.Sort.Order",
+//			"JsonNullable" to "org.openapitools.jackson.nullable.JsonNullable",
 		)
 	)
 	typeMappings.set(
@@ -208,11 +213,13 @@ jooq {
 				isDeprecated = false
 				isFluentSetters = true
 				isJavaTimeTypes = true
+				isJooqVersionReference = true
 
-				isRecords = true  // Generates Record classes
 				isPojos = true    // Generates POJOs
-				isPojosAsJavaRecordClasses = true
-				isImmutablePojos = true
+				isImmutablePojos = false
+				isFluentSetters = true
+//				isPojosAsJavaRecordClasses = true
+//				isRecords = true  // Generates Record classes
 
 				// Naming conventions: add Entity suffix for repository layer objects
 				strategy {

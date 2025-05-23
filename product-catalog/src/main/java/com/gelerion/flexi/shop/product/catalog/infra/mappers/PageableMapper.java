@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, imports = {Sort.class, Sort.Order.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
+        imports = {Sort.class, Sort.Order.class})
 public interface PageableMapper {
 
     @Mapping(target = "sort", expression = "java(toOrderList(page.getSort()))")
@@ -25,6 +26,4 @@ public interface PageableMapper {
                 : StreamSupport.stream(sort.spliterator(), false)
                 .collect(Collectors.toList());
     }
-
-//    ProductPage toProductPage(Page<ProductResource> page);
 }
