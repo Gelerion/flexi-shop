@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
                     ife.getValue()
             );
 
-            return errorBuilder(ex, HttpStatus.BAD_REQUEST, req)
+            return errorBuilder(ex, HttpStatus.UNPROCESSABLE_ENTITY, req)
                     .detail("Invalid JSON request")
                     //.property("trace", ex.getMostSpecificCause().getMessage())
                     .property("errors", Map.of(fieldPath, List.of(detail)))
@@ -120,7 +120,7 @@ public class GlobalExceptionHandler {
         }
 
         // Fallback for other parse problems (malformed JSON, missing brackets, etc.)
-        return errorBuilder(ex, HttpStatus.BAD_REQUEST, req)
+        return errorBuilder(ex, HttpStatus.UNPROCESSABLE_ENTITY, req)
                 .detail("Malformed JSON request")
                 .property("error", ex.getMostSpecificCause().getMessage())
                 .build();
