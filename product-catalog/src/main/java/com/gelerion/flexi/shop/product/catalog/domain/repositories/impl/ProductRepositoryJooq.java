@@ -82,13 +82,15 @@ public class ProductRepositoryJooq implements ProductRepository {
         return paginations.paginate(query, pageable, ProductEntity.class);
     }
 
-    //DSL or direct record updates?
+    //When to use DSL vs. direct record updates:
     //A good rule of thumb is:
-    //“If I can express it in a single record.store() or record.update(), I do. If I need any extra SQL magic, I switch to the DSL.
-    // With updates you should care about concurrent updates
-    // Use the database’s MVCC metadata (Postgres xmin)
-//    @Override
-//    @Transactional // Ensure this annotation is present
+    // "If I can express it in a single record.store() or record.update(), I do. If I need any extra SQL magic, I switch to the DSL."
+
+    //Concurrency considerations
+    // To prevent lost updates, include an optimistic or pessimistic locking check
+    // With Postgres we can leverage xmin hidden field which we can use for optimistic locking,
+    // e.g. .where(PRODUCT.ID.eq(...).and(PRODUCT.XMIN.eq(expectedXmin)))
+    @Override
     public ProductEntity update(ProductEntity product) {
         if (product == null || product.getId() == null) {
             throw new IllegalArgumentException("ProductEntity or its ID cannot be null for update");

@@ -62,17 +62,16 @@ public class ProductsService {
 
     @Transactional
     public ProductResource updateProduct(UUID productId, ProductUpdateRequest productUpdateRequest) {
-        log.debug("Updating product with id: {}. Request: {}", productId, productUpdateRequest);
-
+        log.atDebug().log("Updating product with id: {}. Request: {}", productId, productUpdateRequest);
         return productRepository.findById(productId)
                 .map(product -> productMapper.merge(product, productUpdateRequest))
                 .map(patched -> {
-                    log.info("Patched product with id: {} for update. Patched {}", productId, patched);
+                    log.atInfo().log("Patched product with id: {} for update. Patched {}", productId, patched);
                     return productRepository.update(patched);
                 })
                 .map(productMapper::toResource)
                 .orElseThrow(() -> {
-                    log.warn("Product not found for id: {}", productId);
+                    log.atWarn().log("Product not found for id: {}", productId);
                     return new NoDataFoundException("Product with id " + productId + " not found");
                 });
     }

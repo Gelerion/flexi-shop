@@ -1,5 +1,6 @@
 package com.gelerion.flexi.shop.product.catalog.domain.specifications;
 
+import com.gelerion.flexi.shop.product.catalog.api.query.filtering.ComparisonOperator;
 import com.gelerion.flexi.shop.product.catalog.api.query.filtering.filters.FieldFilter;
 import com.gelerion.flexi.shop.product.catalog.api.query.filtering.parser.QueryFilterParser;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.gelerion.flexi.shop.product.catalog.domain.entities.tables.ProductTable.PRODUCT;
@@ -69,11 +71,22 @@ public class ProductSpecs {
                 ? c
                 : List.of(rawValue);
 
-        return values.stream()
+        List<FieldFilter> filters = values.stream()
                 .map(String::valueOf)
                 .filter(Strings::isNotBlank)
                 .flatMap(filterParser::parse)
-                .map(binding.specBuilder);
+                .toList();
+
+        // we group specs into OR specs where criteria field has more than one element and meets criteria
+        Predicate<ComparisonOperator> eqOperator = it -> it == ComparisonOperator.EQ;
+        if (filters.size() > 1 && filters.stream().map(FieldFilter::operator).allMatch(eqOperator)) {
+            return Stream.of(filters.stream()
+                    .map(binding.specBuilder)
+                    .reduce(JooqSpecification.empty(), JooqSpecification::or));
+        }
+
+        // default path: one spec per filter, caller will AND them
+        return filters.stream().map(binding.specBuilder);
     }
 
     private record FieldBinding(
