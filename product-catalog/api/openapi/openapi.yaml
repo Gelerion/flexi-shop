@@ -602,9 +602,8 @@ components:
             Repeat parameter for range: `rating=gte:4&rating=lte:5`.
           example: [ gte:4 ]
         status:
-          type: string
+          $ref: '#/components/schemas/ProductStatusParam'
           description: Filter by product status.
-          enum: [ active, inactive, discontinued ]
           example: active
         inventoryQuantity:
           type: string
@@ -674,8 +673,7 @@ components:
           description: Price of the product.
           example: 29.99
         status:
-          type: string
-          enum: [active, inactive, discontinued]
+          $ref: '#/components/schemas/ProductStatusParam'
           default: active
           description: Current status of the product.
           example: 'active'
@@ -948,8 +946,7 @@ components:
           minimum: 0.0
           example: 79.95
         status:
-          type: string
-          enum: [ active, inactive, discontinued ]
+          $ref: '#/components/schemas/ProductStatusParam'
           default: active
           example: 'active'
         inventoryQuantity:
@@ -961,27 +958,13 @@ components:
           type: integer
           description: ID of the existing brand to associate.
           example: 101
-        categoryIds:
-          type: array
-          items:
-            type: integer
-          description: List of existing category IDs to associate.
-          example: [ 21, 25 ]
-        tagIds:
-          type: array
-          items:
-            type: integer
-          description: List of existing tag IDs to associate.
-          example: [ 6, 8 ]
       example:
         name: 'Ergonomic Keyboard'
         description: 'A comfortable keyboard designed for long typing sessions.'
         price: 79.95
         status: 'active'
-        inventoryQuantity: 50
         brandId: 101
-        categoryIds: [ 21, 25 ]
-        tagIds: [ 6, 8 ]
+        inventoryQuantity: 50
 
     ProductUpdateRequest:
       type: object
@@ -1415,6 +1398,12 @@ components:
       required:
         - name
         - reason
+
+    ProductStatusParam:
+      type: string
+      description: Status of the product.
+      enum: [ active, inactive, discontinued ]
+      example: active
 
   responses:
     BadRequest:

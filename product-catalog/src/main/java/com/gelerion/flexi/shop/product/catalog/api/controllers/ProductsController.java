@@ -4,47 +4,47 @@ import com.gelerion.flexi.shop.product.catalog.infra.mappers.PageableMapper;
 import com.gelerion.flexi.shop.product.catalog.models.*;
 import com.gelerion.flexi.shop.product.catalog.rest.controllers.ProductsApi;
 import com.gelerion.flexi.shop.product.catalog.services.ProductsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class ProductsController implements ProductsApi {
     private final ProductsService productsService;
     private final PageableMapper mapper;
 
-    public ProductsController(ProductsService productsService,
-                              PageableMapper mapper) {
-        this.productsService = productsService;
-        this.mapper = mapper;
-    }
-
     @Override
     public ResponseEntity<Void> addProductTag(UUID productId, Integer tagId) {
-        return null;
+        return ResponseEntity.noContent().build(); // Stub;
     }
 
     @Override
     public ResponseEntity<ProductResource> createProduct(ProductCreateRequest productCreateRequest) {
-        return null;
+        ProductResource createdProduct = productsService.createProduct(productCreateRequest);
+        return ResponseEntity
+                .created(URI.create(String.format("/products/%s", createdProduct.getId())))
+                .body(createdProduct);
     }
 
     @Override
     public ResponseEntity<Void> deleteProduct(UUID productId) {
-        return null;
+        // productsService.deleteProduct(productId);
+        return ResponseEntity.noContent().build(); // Stub
     }
 
     @Override
     public ResponseEntity<Void> deleteProductTag(UUID productId, Integer tagId) {
-        return null;
+        return ResponseEntity.noContent().build(); // Stub;
     }
-
 
     @Override
     public ResponseEntity<ProductResource> getProductById(UUID productId,

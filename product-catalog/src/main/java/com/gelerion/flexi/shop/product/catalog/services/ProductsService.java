@@ -3,10 +3,8 @@ package com.gelerion.flexi.shop.product.catalog.services;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.ProductEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductRepository;
 import com.gelerion.flexi.shop.product.catalog.infra.mappers.ProductMapper;
-import com.gelerion.flexi.shop.product.catalog.models.ProductFilterCriteria;
-import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
-import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
-import com.gelerion.flexi.shop.product.catalog.models.ProductUpdateRequest;
+import com.gelerion.flexi.shop.product.catalog.models.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.exception.NoDataFoundException;
 import org.springframework.data.domain.Page;
@@ -19,14 +17,10 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProductsService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-
-    public ProductsService(ProductRepository productRepository, ProductMapper productMapper) {
-        this.productRepository = productRepository;
-        this.productMapper = productMapper;
-    }
 
     public ProductResource getProduct(UUID productId, List<ProductIncludeOption> include) {
         return productRepository
@@ -52,12 +46,12 @@ public class ProductsService {
     }
 
     @Transactional
-    public ProductResource createProduct(ProductResource product) {
-//        ProductCompositeEntity productEntity = productMapper.toProductEntity(product);
-//        System.out.println("productEntity = " + productEntity);
-//        Integer id = productRepository.save(productEntity.product()).id();
-//        product.setProductId(id.longValue());
-        return product;
+    public ProductResource createProduct(ProductCreateRequest request) {
+        log.atDebug().log("Creating product with request: {}", request);
+        ProductEntity productEntity = productMapper.toEntity(request);
+        ProductEntity savedProduct = productRepository.save(productEntity);
+        log.atInfo().log("Created product with id: {}", savedProduct.getId());
+        return productMapper.toResource(savedProduct);
     }
 
     @Transactional

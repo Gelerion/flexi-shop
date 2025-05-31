@@ -3,8 +3,11 @@ package com.gelerion.flexi.shop.product.catalog.infra.mappers;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.ProductCompositeEntity;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.enums.ProductStatus;
 import com.gelerion.flexi.shop.product.catalog.domain.entities.tables.pojos.ProductEntity;
+import com.gelerion.flexi.shop.product.catalog.infra.mappers.utils.CommonIgnoreConfig;
 import com.gelerion.flexi.shop.product.catalog.infra.mappers.utils.JsonNullableMapper;
+import com.gelerion.flexi.shop.product.catalog.models.ProductCreateRequest;
 import com.gelerion.flexi.shop.product.catalog.models.ProductResource;
+import com.gelerion.flexi.shop.product.catalog.models.ProductStatusParam;
 import com.gelerion.flexi.shop.product.catalog.models.ProductUpdateRequest;
 import org.mapstruct.*;
 import org.mapstruct.MappingConstants.ComponentModel;
@@ -18,7 +21,8 @@ import org.mapstruct.MappingConstants.ComponentModel;
                 TagMapper.class,
                 UriMapper.class,
                 JsonNullableMapper.class
-        }
+        },
+        config = CommonIgnoreConfig.class
 )
 public interface ProductMapper {
 
@@ -33,11 +37,13 @@ public interface ProductMapper {
     @Mapping(target = "specifications", ignore = true)
     ProductResource toResource(ProductEntity entity);
 
-    default ProductResource.StatusEnum mapStatus(ProductStatus status) {
+    default ProductStatusParam mapStatus(ProductStatus status) {
         if (status == null) return null;
-        return ProductResource.StatusEnum.fromValue(status.toString());
+        return ProductStatusParam.fromValue(status.toString());
     }
 
+    @InheritConfiguration(name = "ignoreAuditFields")
+    @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     ProductEntity merge(@MappingTarget ProductEntity entity, ProductUpdateRequest patch);
 
@@ -46,4 +52,18 @@ public interface ProductMapper {
         return ProductStatus.valueOf(apiStatus.name().toUpperCase());
     }
 
+    @InheritConfiguration(name = "ignoreAuditFields")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "brandId", target = "brandId")
+    @Mapping(source = "price", target = "price")
+    ProductEntity toEntity(ProductCreateRequest request);
+
+    default Long mapBrandId(Integer brandId) {
+        return brandId != null ? brandId.longValue() : null;
+    }
+
+    default ProductStatus mapStatus(ProductStatusParam status) {
+        if (status == null) return null;
+        return ProductStatus.lookupLiteral(status.toString());
+    }
 }

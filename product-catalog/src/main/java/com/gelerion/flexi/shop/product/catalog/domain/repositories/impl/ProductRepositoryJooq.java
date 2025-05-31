@@ -8,6 +8,7 @@ import com.gelerion.flexi.shop.product.catalog.domain.repositories.ProductReposi
 import com.gelerion.flexi.shop.product.catalog.domain.specifications.ProductSpecs;
 import com.gelerion.flexi.shop.product.catalog.models.ProductFilterCriteria;
 import com.gelerion.flexi.shop.product.catalog.models.ProductIncludeOption;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.*;
 import org.springframework.data.domain.Page;
@@ -29,20 +30,12 @@ import static org.jooq.impl.DSL.*;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class ProductRepositoryJooq implements ProductRepository {
     private final DSLContext dsl;
     private final CompositeProductRepository compositeProductRepository;
     private final ProductSpecs productSpecs;
     private final Paginations paginations;
-
-    public ProductRepositoryJooq(DSLContext dsl,
-                                 CompositeProductRepository compositeProductRepository,
-                                 ProductSpecs productSpecs, Paginations paginations) {
-        this.dsl = dsl;
-        this.compositeProductRepository = compositeProductRepository;
-        this.productSpecs = productSpecs;
-        this.paginations = paginations;
-    }
 
     @Override
     public ProductEntity save(ProductEntity product) {
